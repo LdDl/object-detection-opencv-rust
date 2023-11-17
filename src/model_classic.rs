@@ -25,14 +25,21 @@ use crate::utils::BACKEND_TARGET_VALID;
 const YOLO_BLOB_MEAN: (f64, f64, f64, f64) = (0.0, 0.0, 0.0, 0.0);
 
 /// Wrapper around "classic" versions of YOLO (v3, v4 and v7 are supported currently)
-/// "Classic" - because they are developed historically by AlexeyAB and pjreddie (see the ref. https://github.com/AlexeyAB/darknet and https://github.com/pjreddie/darknet)
+/// Why this versions is considered to be "classic"? Well, because they are developed historically by AlexeyAB and pjreddie (see the ref. https://github.com/AlexeyAB/darknet and https://github.com/pjreddie/darknet)
 pub struct ModelYOLOClassic {
+    // Underlying OpenCV's DNN Net implementation
     net: Net,
+    // Input size a.k.a network size (width and height of input). It is usefull when calculating relative bounding box to size of source image or resizing image to proper (width, height)
     input_size: Size,
+    // Blob's scale for OpenCV's blob. For YOLO it is just (0.0 - red channel, 0.0 - blue, 0.0 - green, 0.0 - alpha) most of time (if it is not, than it is needed to make this field adjustable)
     blob_mean: Scalar,
+    // Blob's scale for OpenCV's blob. For YOLO it is just 1/255 (~ 0.0039) most of time (if it is not, than it is needed to make this field adjustable)
     blob_scale: f64,
+    // Blob's name basically for OpenCV's blob. For YOLO it is just an empty string most of time (if it is not, than it is needed to make this field adjustable)
     blob_name: &'static str,
+    // Layers to aggregate results from (for some models there could me multiple YOLO layers)
     out_layers: Vector<String>,
+    // Set of classes which will be used to filter detections 
     filter_classes: Vec<usize>
 }
 
