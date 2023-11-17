@@ -1,6 +1,6 @@
 use od_opencv::{
     model_format::ModelFormat,
-    model_ultralytics::ModelUltralyticsV8
+    model_classic::ModelYOLOClassic
 };
 
 use opencv::{
@@ -15,10 +15,10 @@ use opencv::{
 
 fn main() {
     let classes_labels: Vec<&str> = vec!["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"];
-    let mf = ModelFormat::ONNX;
-    let net_width = 640;
-    let net_height = 640;
-    let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
+    let mf = ModelFormat::Darknet;
+    let net_width = 416;
+    let net_height = 416;
+    let mut model = ModelYOLOClassic::new_from_file("pretrained/yolov7-tiny.weights", Some("pretrained/yolov7-tiny.cfg"), (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
     let mut frame = imread("images/dog.jpg", 1).unwrap();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
     for (i, bbox) in bboxes.iter().enumerate() {
@@ -27,5 +27,5 @@ fn main() {
         println!("\tBounding box: {:?}", bbox);
         println!("\tConfidences: {}", confidences[i]);
     }
-    imwrite("images/dog_yolov8_n.jpg", &frame, &Vector::new()).unwrap();
+    imwrite("images/dog_yolov7_tiny.jpg", &frame, &Vector::new()).unwrap();
 }

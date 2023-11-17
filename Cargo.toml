@@ -33,7 +33,10 @@ path = "src/lib.rs"
 
 
 [[example]]
-name = "yolo_v3_tiny"
+name = "yolo_v4_tiny"
+
+[[example]]
+name = "yolo_v7_tiny"
 
 [[example]]
 name = "yolo_v8_n"

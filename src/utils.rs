@@ -62,12 +62,10 @@ pub fn min_max_loc_partial<T: PartialOrd + Copy>(data: &[&T]) -> Option<(T, T, u
 }
 
 mod tests {
-    #[warn(unused_imports)]
-    use crate::utils::min_max_loc_partial;
     #[test]
     fn test_min_max_loc_partial() {
         let x = vec![&3.0, &4.0, &1.0, &2.0, &9.0, &0.5, &8.0];
-        let (min, max, min_loc, max_loc) = min_max_loc_partial(&x).unwrap();
+        let (min, max, min_loc, max_loc) = crate::utils::min_max_loc_partial(&x).unwrap();
         assert_eq!(0.5, min);
         assert_eq!(5, min_loc);
         assert_eq!(9.0, max);

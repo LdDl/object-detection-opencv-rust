@@ -221,9 +221,6 @@ mod tests {
     use super::*;
     use opencv::{
         imgcodecs::imread,
-        imgcodecs::imwrite,
-        imgproc::LINE_4,
-        imgproc::rectangle,
         dnn::DNN_BACKEND_CUDA,
         dnn::DNN_TARGET_CUDA,
     };
@@ -234,14 +231,12 @@ mod tests {
         let net_width = 640;
         let net_height = 640;
         let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
-        let mut frame = imread("images/dog.jpg", 1).unwrap();
+        let frame = imread("images/dog.jpg", 1).unwrap();
         let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
         for (i, bbox) in bboxes.iter().enumerate() {
-            rectangle(&mut frame, *bbox, Scalar::from((0.0, 255.0, 0.0)), 2, LINE_4, 0).unwrap();
             println!("Class: {}", classes_labels[class_ids[i]]);
             println!("\tBounding box: {:?}", bbox);
             println!("\tConfidences: {}", confidences[i]);
         }
-        imwrite("images/dog_yolov8_n.jpg", &frame, &Vector::new()).unwrap();
     }
 }
