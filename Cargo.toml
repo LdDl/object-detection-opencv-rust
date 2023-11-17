@@ -1,5 +1,5 @@
 [package]
-name = "object-detection-opencv-rust"
+name = "od_opencv"
 repository = "https://github.com/LdDl/object-detection-opencv-rust"
 readme = "README.md"
 keywords = [
@@ -10,13 +10,13 @@ keywords = [
   "yolo-v8",
 ]
 license = "MIT"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
 exclude = ["/.github", "/ci", "/tools", "release.toml", "rustfmt.toml", "download_v3_tiny.sh", "download_v4_tiny.sh", "download_v7_tiny.sh", "download_v8_n.sh", "/images", "/pretrained"]
 description = "Object detection utilities in Rust programming language for YOLO-based neural networks in OpenCV ecosystem"
 homepage = "https://github.com/LdDl/object-detection-opencv-rust"
-documentation = "https://docs.rs/object-detection-opencv-rust"
+documentation = "https://docs.rs/od_opencv"
 categories = [
   "algorithms",
   "multimedia",
