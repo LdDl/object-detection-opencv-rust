@@ -1,2 +1,2 @@
 curl https://pjreddie.com/media/files/yolov3-tiny.weights --create-dirs -o pretrained/yolov3-tiny.weights
-curl https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov3-tiny.cfg --create-dirs -o pretrained/yolov7-tiny.cfg
+curl https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov3-tiny.cfg --create-dirs -o pretrained/yolov3-tiny.cfg

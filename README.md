@@ -7,7 +7,7 @@ This crate provides some basic structures and methods for solving object detecti
 
 | Network type  | Darknet | ONNX |
 | ------------- | ------------- | ------------- |
-| YOLO v3 tiny  | :warning: (strange output, need to investigate)  | :x:  |
+| YOLO v3 tiny  | :white_check_mark:  | :x:  |
 | YOLO v4 tiny  | :white_check_mark:  | :x:  |
 | YOLO v7 tiny  | :white_check_mark:   | :x:  |
 | YOLO v3  | :question: (need to test)  | :x:  |

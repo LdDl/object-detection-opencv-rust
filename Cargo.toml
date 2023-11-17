@@ -31,6 +31,8 @@ categories = [
 name = "od_opencv"
 path = "src/lib.rs"
 
+[[example]]
+name = "yolo_v3_tiny"
 
 [[example]]
 name = "yolo_v4_tiny"
