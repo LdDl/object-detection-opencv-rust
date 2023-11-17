@@ -28,6 +28,16 @@ lazy_static!{
 }
 
 /// Implementation of minMaxLoc in OpenCV (see the ref. https://docs.opencv.org/4.8.0/d2/de8/group__core__array.html#gab473bf2eb6d14ff97e89b355dac20707) basically.
+/// Returns min, max and its indices in array.
+/// Notice that it is for &[&T] rather than &[T]
+/// Basic usage:
+/// ```
+/// use od_opencv::utils::min_max_loc_partial;
+/// let x = vec![&3.0, &4.0, &1.0, &2.0, &9.0, &0.5, &8.0];
+/// let (min, max, min_loc, max_loc) = min_max_loc_partial(&x).unwrap();
+/// println!("Min: {} at pos {}. Max: {} at pos {}", min, max, min_loc, max_loc);
+/// ```
+/// 
 pub fn min_max_loc_partial<T: PartialOrd + Copy>(data: &[&T]) -> Option<(T, T, usize, usize)> {
     if data.is_empty() {
         return None;
@@ -49,4 +59,18 @@ pub fn min_max_loc_partial<T: PartialOrd + Copy>(data: &[&T]) -> Option<(T, T, u
     }
 
     Some((*min_val, *max_val, min_loc, max_loc))
+}
+
+mod tests {
+    #[warn(unused_imports)]
+    use crate::utils::min_max_loc_partial;
+    #[test]
+    fn test_min_max_loc_partial() {
+        let x = vec![&3.0, &4.0, &1.0, &2.0, &9.0, &0.5, &8.0];
+        let (min, max, min_loc, max_loc) = min_max_loc_partial(&x).unwrap();
+        assert_eq!(0.5, min);
+        assert_eq!(5, min_loc);
+        assert_eq!(9.0, max);
+        assert_eq!(4, max_loc);
+    }
 }

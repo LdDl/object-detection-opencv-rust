@@ -140,7 +140,14 @@ impl ModelUltralyticsV8 {
                 // Access elements as if transposed
                 let classes_scores: Vec<&f32> = object_data[4..].to_vec();
                 // Find min and max scores and locations
-                let (_, max_score, _, max_class_index) = min_max_loc_partial(&classes_scores).unwrap();
+                let (_, max_score, _, max_class_index) = match min_max_loc_partial(&classes_scores) {
+                    Some((a, b, c, d)) => {
+                        (a, b, c, d)
+                    },
+                    None => {
+                        return Err(Error::new(500, "Can't execute min_max_loc_partial due the class_scores is an empty array"));
+                    }
+                };
                 if max_score >= 0.25 {
                     if self.filter_classes.len() > 0 && !self.filter_classes.contains(&max_class_index) {
                         continue;
