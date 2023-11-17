@@ -6,9 +6,8 @@ keywords = [
   "computer-vision",
   "object-detection",
   "yolo",
-  "yolov8",
-  "yolov4",
-  "yolov3",
+  "opencv",
+  "yolo-v8",
 ]
 license = "MIT"
 version = "0.1.0"
