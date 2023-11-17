@@ -23,7 +23,18 @@ This crate provides some basic structures and methods for solving object detecti
 - [References](#references)
 
 ## About
-@todo
+
+_- Why?_
+
+Well, I just tired a bit of boilerplating (model initializing, postprocessing functions and etc.) in my both private and public projects.
+
+_- When it is usefull?_
+
+Well, there are several circumstances when you may need this crate:
+
+* You need to use YOLO as your neural network base;
+* You do not want use Pytorch / Tensorflow / Jax or any other DL/ML framework (someday it may happen to use pure ONNX without OpenCV features in this crate - PR's are welcome);
+* You need to use OpenCV's DNN module to initialize neural network;
 
 ## Prerequisites
 
