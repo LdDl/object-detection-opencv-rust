@@ -18,12 +18,25 @@ This crate provides some basic structures and methods for solving object detecti
 ## Table of Contents
 
 - [About](#about)
+- [Prerequisites](#prerequisites)
 - [Usage](#usage)
 - [References](#references)
 
 ## About
 @todo
 
+## Prerequisites
+
+* For sure you must have OpenCV installed with DNN extra module. If you need to ulitize power of GPU/OpenVINO then you need to consider corresponding extra modules too.
+    
+    I love to use this [Makefile](https://github.com/hybridgroup/gocv/blob/release/Makefile) with little adjustment (OpenCV's version / enabling python bindings) for my needsю
+
+* Prepare neural network: train it or get pretrained one. I provide pretty simple Bash scripts to download "small" versions of YOLO
+    * YOLO v3 tiny - [download_v3_tiny.sh](download_v3_tiny.sh);
+    * YOLO v4 tiny - [download_v4_tiny.sh](download_v4_tiny.sh);
+    * YOLO v7 tiny - [download_v7_tiny.sh](download_v7_tiny.sh);
+    * YOLO v8 nano (n) - [download_v8_n.sh](download_v8_n.sh). Notice that this script downloads Pytorch-based weights and converts it into ONNX one via `ultralytics` package for Python.
+    
 ## Usage
 @todo
 
@@ -35,5 +48,4 @@ This crate provides some basic structures and methods for solving object detecti
 * Most popular fork of Darknet YOLO - https://github.com/AlexeyAB/darknet
 * Developers of YOLOv8 - https://github.com/ultralytics/ultralytics. If you are aware of some original papers for YOLOv8 architecture, please contact me to mention it in this README.
 * Rust OpenCV's bindings - https://github.com/twistedfall/opencv-rust
-
-
+* Go OpenCV's bindings (for ready-to-go Makefile) - https://github.com/hybridgroup/gocv

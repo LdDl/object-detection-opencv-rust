@@ -63,8 +63,25 @@ impl ModelUltralyticsV8 {
     /// Basic usage:
     /// 
     /// ```
-    /// let x = 1.0;
+    /// use opencv::dnn::{DNN_BACKEND_OPENCV, DNN_TARGET_CPU};
+    /// use opencv::imgcodecs::imread;
+    /// use od_opencv::model_format::ModelFormat;
+    /// use od_opencv::model_ultralytics::ModelUltralyticsV8;
+    /// let mf = ModelFormat::ONNX;
+    /// let net_width = 640;
+    /// let net_height = 640;
+    /// let classes_labels: Vec<&str> = vec!["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"];
+    /// let filter_classes: Vec<usize> = vec![16]; // 16-th class is 'Dog' in COCO's 80 classes. So in this case model will output only dogs if it founds them. Make it empty and you will get all detected objects.
+    /// let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_OPENCV, DNN_TARGET_CPU, filter_classes).unwrap();
+    /// let mut frame = imread("images/dog.jpg", 1).unwrap();
+    /// let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
+    /// for (i, bbox) in bboxes.iter().enumerate() {
+    ///     println!("Class: {}", classes_labels[class_ids[i]]);
+    ///     println!("\tBounding box: {:?}", bbox);
+    ///     println!("\tConfidences: {}", confidences[i]);
+    /// }
     /// ```
+    /// 
     pub fn new_from_file(weight_file_path: &str, cfg_file_path: Option<&str>, net_size: (i32, i32), model_format: ModelFormat, backend_id: i32, target_id: i32, filter_classes: Vec<usize>) -> Result<Self, Error> {
         if model_format == ModelFormat::ONNX {
             return ModelUltralyticsV8::new_from_onnx_file(weight_file_path, net_size, backend_id, target_id, filter_classes)
@@ -212,15 +229,19 @@ mod tests {
     };
     #[test]
     fn test_yolo_v8() {
-        let net_width = 416;
-        let net_height = 416;
-        let mut model = ModelUltralyticsV8::new_from_file("pretrained/best_opset12.onnx", None, (net_width, net_height), ModelFormat::ONNX, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
-        let mut frame = imread("images/1.png", 1).unwrap();
-        let (nmsb, _, _) = model.forward(&frame, 0.25, 0.4).unwrap();
-
-        for (_, bbox) in nmsb.iter().enumerate() {
+        let classes_labels: Vec<&str> = vec!["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"];
+        let mf = ModelFormat::ONNX;
+        let net_width = 640;
+        let net_height = 640;
+        let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
+        let mut frame = imread("images/dog.jpg", 1).unwrap();
+        let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
+        for (i, bbox) in bboxes.iter().enumerate() {
             rectangle(&mut frame, *bbox, Scalar::from((0.0, 255.0, 0.0)), 2, LINE_4, 0).unwrap();
+            println!("Class: {}", classes_labels[class_ids[i]]);
+            println!("\tBounding box: {:?}", bbox);
+            println!("\tConfidences: {}", confidences[i]);
         }
-        imwrite("images/predicted.png", &frame, &Vector::new()).unwrap();
+        imwrite("images/dog_yolov8_n.jpg", &frame, &Vector::new()).unwrap();
     }
 }
