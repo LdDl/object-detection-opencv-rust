@@ -1,5 +1,8 @@
 # Object detection utilities in Rust programming language for YOLO-based neural networks in OpenCV ecosystem
 
+## W.I.P - There is no crate currently (2023.11.17)
+## Crate will be published to crates.io when I write more tests and docs
+
 This crate provides some basic structures and methods for solving object detections tasks via [OpenCV's DNN module](https://docs.opencv.org/4.8.0/d2/d58/tutorial_table_of_content_dnn.html). Currently implemented and tested workflows:
 
 | Network type  | Darknet | ONNX |
