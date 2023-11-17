@@ -215,28 +215,3 @@ impl ModelUltralyticsV8 {
         Ok((nms_bboxes, nms_classes_ids, nms_confidences))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use opencv::{
-        imgcodecs::imread,
-        dnn::DNN_BACKEND_CUDA,
-        dnn::DNN_TARGET_CUDA,
-    };
-    #[test]
-    fn test_yolo_v8() {
-        let classes_labels: Vec<&str> = vec!["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"];
-        let mf = ModelFormat::ONNX;
-        let net_width = 640;
-        let net_height = 640;
-        let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
-        let frame = imread("images/dog.jpg", 1).unwrap();
-        let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
-        for (i, bbox) in bboxes.iter().enumerate() {
-            println!("Class: {}", classes_labels[class_ids[i]]);
-            println!("\tBounding box: {:?}", bbox);
-            println!("\tConfidences: {}", confidences[i]);
-        }
-    }
-}

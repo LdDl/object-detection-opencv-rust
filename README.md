@@ -36,6 +36,10 @@ Well, there are several circumstances when you may need this crate:
 * You do not want use Pytorch / Tensorflow / Jax or any other DL/ML framework (someday it may happen to use pure ONNX without OpenCV features in this crate - PR's are welcome);
 * You need to use OpenCV's DNN module to initialize neural network;
 
+_- Why no YOLOv5?_
+
+I think there is a difference in postprocessing stuff between v8 and v5 version. I need more time to investigate what should be done exactly to make v5 work.
+
 ## Prerequisites
 
 * For sure you must have OpenCV installed with DNN extra module. If you need to ulitize power of GPU/OpenVINO then you need to consider corresponding extra modules too.
@@ -128,6 +132,12 @@ There are some [examples](examples), but let me guide you step-by-step
     imwrite("images/dog_yolov8_n.jpg", &frame, &Vector::new()).unwrap();
     ```
 
+6. You are good to go
+    ```rust
+    cargo run
+    ```
+
+7. If anything is going wrong, feel free to [open an issue](https://github.com/LdDl/object-detection-opencv-rust/issues/new)
 
 ## References
 * YOLO v3 paper - https://arxiv.org/abs/1804.02767, Joseph Redmon, Ali Farhadi
