@@ -2,7 +2,14 @@
 name = "object-detection-opencv-rust"
 repository = "https://github.com/LdDl/object-detection-opencv-rust"
 readme = "README.md"
-keywords = ["computer-vision", "object-detection", "yolo", "yolov8", "yolov4", "yolov3"]
+keywords = [
+  "computer-vision",
+  "object-detection",
+  "yolo",
+  "yolov8",
+  "yolov4",
+  "yolov3",
+]
 license = "MIT"
 version = "0.1.0"
 edition = "2021"
@@ -10,8 +17,27 @@ authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
 exclude = ["/.github", "/ci", "/tools", "release.toml", "rustfmt.toml"]
 homepage = "https://github.com/LdDl/object-detection-opencv-rust"
 documentation = "https://docs.rs/object-detection-opencv-rust"
-categories = ["algorithms", "neural-networks", "computer-vision", "mathematics", "science"]
+categories = [
+  "algorithms",
+  "neural-networks",
+  "computer-vision",
+  "mathematics",
+  "science",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "od_opencv"
+path = "src/lib.rs"
+
+[[bin]]
+name = "od_model"
+path = "src/bin.rs"
+
 [dependencies]
+lazy_static = "1.4.0"
+opencv = { version = "0.66", default-features = false, features = ["dnn", "imgcodecs", "imgproc"] }
+
+[patch.crates-io]
+cc = { git = "https://github.com/rust-lang/cc-rs.git", version = "1.0", tag = "1.0.79" }
