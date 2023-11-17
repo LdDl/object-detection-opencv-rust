@@ -19,7 +19,7 @@ homepage = "https://github.com/LdDl/object-detection-opencv-rust"
 documentation = "https://docs.rs/object-detection-opencv-rust"
 categories = [
   "algorithms",
-  "neural-networks",
+  "multimedia",
   "computer-vision",
   "mathematics",
   "science",
