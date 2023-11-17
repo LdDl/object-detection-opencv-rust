@@ -31,9 +31,12 @@ categories = [
 name = "od_opencv"
 path = "src/lib.rs"
 
-[[bin]]
-name = "od_model"
-path = "src/bin.rs"
+
+[[example]]
+name = "yolo_v3_tiny"
+
+[[example]]
+name = "yolo_v8_n"
 
 [dependencies]
 lazy_static = "1.4.0"
