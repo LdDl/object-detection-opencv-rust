@@ -37,19 +37,19 @@ Well, there are several circumstances when you may need this crate:
 
 _- Why no YOLOv5?_
 
-I think there is a difference in postprocessing stuff between v8 and v5 version. I need more time to investigate what should be done exactly to make v5 work.
+I think there is a difference in postprocessing stuff between v8 and v5 versions. I need more time to investigate what should be done exactly to make v5 work.
 
 _- What OpenCV's version is tested?_
 
 I've tested it with v4.7.0. Rust bindings version: v0.66.0
 
-_- Is wrapper structures are thread safe?_
+_- Are wrapper structures thread safe?_
 
 I'm not sure it is intended to be used in multiple threads (PR's are welcome). But I think you should use some queue mechanism if you want to give "async" acces to provided structs.
 
 ## Prerequisites
 
-* For sure you must have OpenCV installed with DNN extra module. If you need to ulitize power of GPU/OpenVINO then you need to consider corresponding extra modules too.
+* For sure you must have OpenCV installed with DNN extra module. If you need to ulitize power of GPU/OpenVINO then you need to consider to include corresponding extra modules too.
     
     I love to use this [Makefile](https://github.com/hybridgroup/gocv/blob/release/Makefile) with little adjustment (OpenCV's version / enabling python bindings) for my needs.
 
