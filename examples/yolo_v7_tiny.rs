@@ -18,7 +18,9 @@ fn main() {
     let mf = ModelFormat::Darknet;
     let net_width = 416;
     let net_height = 416;
-    let mut model = ModelYOLOClassic::new_from_file("pretrained/yolov7-tiny.weights", Some("pretrained/yolov7-tiny.cfg"), (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
+    // let class_filters: Vec<usize> = vec![15, 16];
+    let class_filters: Vec<usize> = vec![];
+    let mut model = ModelYOLOClassic::new_from_file("pretrained/yolov7-tiny.weights", Some("pretrained/yolov7-tiny.cfg"), (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, class_filters).unwrap();
     let mut frame = imread("images/dog.jpg", 1).unwrap();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
     for (i, bbox) in bboxes.iter().enumerate() {

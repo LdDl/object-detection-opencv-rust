@@ -115,8 +115,14 @@ There are some [examples](examples), but let me guide you step-by-step
     let net_width = 640;
     let net_height = 640;
 
+    // Initialize optional filters.
+    // E.g.: if you do want to find only dogs and cats and you can't re-train neural network, 
+    // then you can just place `vec![15, 16]` to filter dogs and cats (15 - index of `cat` in class labels, 16 - `dog`)
+    // let class_filters: Vec<usize> = vec![15, 16];
+    let class_filters: Vec<usize> = vec![];
+
     // Initialize model itself
-    let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
+    let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, class_filters).unwrap();
 
     // Read image into the OpenCV's Mat object
     // Define it as mutable since we are going to put bounding boxes onto it.

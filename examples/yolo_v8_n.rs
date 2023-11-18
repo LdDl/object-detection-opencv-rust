@@ -18,6 +18,8 @@ fn main() {
     let mf = ModelFormat::ONNX;
     let net_width = 640;
     let net_height = 640;
+    // let class_filters: Vec<usize> = vec![15, 16];
+    let class_filters: Vec<usize> = vec![];
     let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8n.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
     let mut frame = imread("images/dog.jpg", 1).unwrap();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();

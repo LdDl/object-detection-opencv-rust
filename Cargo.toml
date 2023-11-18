@@ -12,6 +12,7 @@ keywords = [
 license = "MIT"
 version = "0.1.1"
 edition = "2021"
+rust-version = "1.73"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
 exclude = ["/.github", "/ci", "/tools", "release.toml", "rustfmt.toml", "download_v3_tiny.sh", "download_v4_tiny.sh", "download_v7_tiny.sh", "download_v8_n.sh", "/images", "/pretrained"]
 description = "Object detection utilities in Rust programming language for YOLO-based neural networks in OpenCV ecosystem"
@@ -30,6 +31,7 @@ categories = [
 [lib]
 name = "od_opencv"
 path = "src/lib.rs"
+doctest = false
 
 [[example]]
 name = "yolo_v3_tiny"
