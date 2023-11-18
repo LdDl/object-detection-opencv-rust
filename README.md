@@ -9,10 +9,14 @@ This crate provides some basic structures and methods for solving object detecti
 | YOLO v3 tiny  | :white_check_mark:  | :x:  |
 | YOLO v4 tiny  | :white_check_mark:  | :x:  |
 | YOLO v7 tiny  | :white_check_mark:   | :x:  |
-| YOLO v3  | :question: (need to test)  | :x:  |
-| YOLO v4  | :question: (need to test)  | :x:  |
-| YOLO v7 | :question: (need to test)  | :x:  |
+| YOLO v3  | :white_check_mark:  | :x:  |
+| YOLO v4  | :white_check_mark: | :x:  |
+| YOLO v7 | :white_check_mark:  | :x:  |
 | YOLO v8 n  | :x: (is it even possible?) | :white_check_mark:  |
+| YOLO v8 s  | :x: (is it even possible?) | :question: (need to test) |
+| YOLO v8 m  | :x: (is it even possible?) | :question: (need to test) |
+| YOLO v8 l  | :x: (is it even possible?) | :question: (need to test) |
+| YOLO v8 x  | :x: (is it even possible?) | :question: (need to test) |
 
 ## Table of Contents
 
@@ -54,9 +58,9 @@ I'm not sure it is intended to be used in multiple threads (PR's are welcome). B
     I love to use this [Makefile](https://github.com/hybridgroup/gocv/blob/release/Makefile) with little adjustment (OpenCV's version / enabling python bindings) for my needs.
 
 * Prepare neural network: train it or get pretrained one. I provide pretty simple Bash scripts to download "small" versions of YOLO
-    * YOLO v3 tiny - [download_v3_tiny.sh](download_v3_tiny.sh);
-    * YOLO v4 tiny - [download_v4_tiny.sh](download_v4_tiny.sh);
-    * YOLO v7 tiny - [download_v7_tiny.sh](download_v7_tiny.sh);
+    * YOLO v3 tiny - [download_v3_tiny.sh](download_v3_tiny.sh); YOLO v3 - [download_v3.sh](download_v3.sh);
+    * YOLO v4 tiny - [download_v4_tiny.sh](download_v4_tiny.sh); YOLO v4 - [download_v4.sh](download_v4.sh);
+    * YOLO v7 tiny - [download_v7_tiny.sh](download_v7_tiny.sh); YOLO v7 - [download_v7.sh](download_v7.sh);
     * YOLO v8 nano (n) - [download_v8_n.sh](download_v8_n.sh). Notice that this script downloads Pytorch-based weights and converts it into ONNX one via `ultralytics` package for Python.
     
 ## Usage
