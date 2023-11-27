@@ -82,6 +82,10 @@ impl ModelYOLOClassic {
     /// ```
     /// 
     pub fn new_from_file(weight_file_path: &str, cfg_file_path: Option<&str>, net_size: (i32, i32), model_format: ModelFormat, backend_id: i32, target_id: i32, filter_classes: Vec<usize>) -> Result<Self, Error> {
+        if BACKEND_TARGET_VALID.get(&backend_id).and_then(|map| map.get(&target_id)).is_none() {
+            return Err(Error::new(400, format!("Combination of BACKEND '{}' and TARGET '{}' is not valid", backend_id, target_id)));
+        };
+
         if model_format == ModelFormat::ONNX {
             return ModelYOLOClassic::new_from_onnx_file(weight_file_path, net_size, backend_id, target_id, filter_classes)
         }
@@ -94,10 +98,6 @@ impl ModelYOLOClassic {
             },
             None => { Err(Error::new(400, "No configuration file path has been provided")) }
         }?;
-        
-        if BACKEND_TARGET_VALID.get(&backend_id).and_then(|map| map.get(&target_id)).is_none() {
-            return Err(Error::new(400, format!("Combination of BACKEND '{}' and TARGET '{}' is not valid", backend_id, target_id)));
-        };
 
         ModelYOLOClassic::new_from_darknet_file(weight_file_path, cfg, net_size, backend_id, target_id, filter_classes)
     }

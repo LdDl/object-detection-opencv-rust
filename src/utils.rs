@@ -14,7 +14,10 @@ use opencv::{
 };
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
-
+use crate::model_format::{
+    ModelFormat,
+    ModelVersion
+};
 use lazy_static::lazy_static;
 
 // Utilize lazy_static macro to create compatibility table for OpenCV's DNN backends and targets valid combinations
@@ -26,6 +29,14 @@ lazy_static!{
         (DNN_BACKEND_CUDA, HashSet::from_iter(vec![DNN_TARGET_CUDA, DNN_TARGET_CUDA_FP16])),
     ].into_iter().collect();
 }
+
+lazy_static!{
+    pub static ref FORMAT_VERSION_VALID: HashMap<ModelFormat, HashSet<ModelVersion>> = vec![
+        (ModelFormat::Darknet, HashSet::from_iter(vec![ModelVersion::V3, ModelVersion::V4, ModelVersion::V7])),
+        (ModelFormat::ONNX, HashSet::from_iter(vec![ModelVersion::V8])),
+    ].into_iter().collect();
+}
+
 
 /// Implementation of minMaxLoc in OpenCV (see the ref. https://docs.opencv.org/4.8.0/d2/de8/group__core__array.html#gab473bf2eb6d14ff97e89b355dac20707) basically.
 /// Returns min, max and its indices in array.
