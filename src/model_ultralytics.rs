@@ -19,6 +19,7 @@ use opencv::{
 };
 
 use crate::model_format::ModelFormat;
+use crate::model::ModelTrait;
 use crate::utils::{
     BACKEND_TARGET_VALID,
     min_max_loc_partial
@@ -213,5 +214,11 @@ impl ModelUltralyticsV8 {
             .filter_map(|(idx, item)| if indices_vec.contains(&(idx as i32)) {Some(item)} else {None}));
 
         Ok((nms_bboxes, nms_classes_ids, nms_confidences))
+    }
+}
+
+impl ModelTrait for ModelUltralyticsV8 {
+    fn forward(&mut self, image: &Mat, conf_threshold: f32, nms_threshold: f32) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), Error>{
+        self.forward(image, conf_threshold, nms_threshold)
     }
 }
