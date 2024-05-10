@@ -47,7 +47,7 @@ name = "yolo_v8_n"
 
 [dependencies]
 lazy_static = "1.4.0"
-opencv = { version = "0.88.5", default-features = false, features = ["dnn", "imgcodecs", "imgproc"] }
+opencv = { version = "0.91.3", default-features = false, features = ["dnn", "imgcodecs", "imgproc"] }
 
 [patch.crates-io]
 cc = { git = "https://github.com/rust-lang/cc-rs.git", version = "1.0", tag = "1.0.79" }

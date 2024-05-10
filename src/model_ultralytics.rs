@@ -2,6 +2,7 @@ use opencv::{
     prelude::NetTrait,
     prelude::NetTraitConst,
     prelude::MatTraitConst,
+    core::VectorToVec,
     core::Scalar,
     core::Size,
     core::Mat,

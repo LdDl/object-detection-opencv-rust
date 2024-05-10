@@ -3,6 +3,7 @@ use opencv::{
     prelude::NetTraitConst,
     prelude::MatTraitConst,
     prelude::MatTraitConstManual,
+    core::VectorToVec,
     core::Scalar,
     core::Size,
     core::Mat,
