@@ -33,7 +33,7 @@ lazy_static!{
 lazy_static!{
     pub static ref FORMAT_VERSION_VALID: HashMap<ModelFormat, HashSet<ModelVersion>> = vec![
         (ModelFormat::Darknet, HashSet::from_iter(vec![ModelVersion::V3, ModelVersion::V4, ModelVersion::V7])),
-        (ModelFormat::ONNX, HashSet::from_iter(vec![ModelVersion::V8])),
+        (ModelFormat::ONNX, HashSet::from_iter(vec![ModelVersion::V4, ModelVersion::V8])),
     ].into_iter().collect();
 }
 
