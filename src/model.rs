@@ -26,7 +26,7 @@ pub trait ModelTrait {
 /// |                        | ModelFormat::Darknet | ModelFormat::ONNX |
 /// |------------------------|----------------------|------------------|
 /// | ModelVersion::V3       |                    + |                  |
-/// | ModelVersion::V4       |                    + |                  |
+/// | ModelVersion::V4       |                    + |                + |
 /// | ModelVersion::V7       |                    + |                  |
 /// | ModelVersion::V8       |                      |                + |
 /// 
