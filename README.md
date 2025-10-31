@@ -80,8 +80,8 @@ There are some [examples](examples), but let me guide you step-by-step
 
 1. Add OpenCV's bindings crate to `Cargo.toml` also:
     ```shell
-    # I'm using 0.66 version
-    cargo add opencv@0.66
+    # I'm using 0.96 version
+    cargo add opencv@0.96
     ```
 
 2. Download pretrained or use your own neural network.
