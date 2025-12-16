@@ -9,17 +9,21 @@ use opencv::{
     core::Vector,
     core::Rect,
     core::CV_32F,
-    core::CV_8UC3,
-    core::BORDER_CONSTANT,
-    core::copy_make_border,
     dnn::read_net,
     dnn::read_net_from_onnx,
     dnn::blob_from_image,
     dnn::nms_boxes,
     dnn::Net,
+    Error
+};
+
+#[cfg(feature = "letterbox")]
+use opencv::{
+    core::CV_8UC3,
+    core::BORDER_CONSTANT,
+    core::copy_make_border,
     imgproc::resize,
     imgproc::INTER_LINEAR,
-    Error
 };
 
 use crate::model_format::ModelFormat;
@@ -49,8 +53,10 @@ pub struct ModelUltralyticsV8 {
     // Set of classes which will be used to filter detections
     filter_classes: Vec<usize>,
     // Reusable buffer for letterbox resize (avoids allocation per frame)
+    #[cfg(feature = "letterbox")]
     letterbox_resized: Mat,
     // Reusable buffer for letterbox padding (avoids allocation per frame)
+    #[cfg(feature = "letterbox")]
     letterbox_padded: Mat,
 }
 
@@ -124,6 +130,8 @@ impl ModelUltralyticsV8 {
         neural_net.set_preferable_backend(backend_id)?;
         neural_net.set_preferable_target(target_id)?;
         let out_layers = neural_net.get_unconnected_out_layers_names()?;
+
+        #[cfg(feature = "letterbox")]
         // Pre-allocate letterbox_padded with known target size (width x height, 3 channels)
         let letterbox_padded = Mat::new_rows_cols_with_default(
             net_size.1,  // height
@@ -138,47 +146,62 @@ impl ModelUltralyticsV8 {
             blob_mean: Scalar::new(YOLO_BLOB_MEAN.0, YOLO_BLOB_MEAN.1, YOLO_BLOB_MEAN.2, YOLO_BLOB_MEAN.3),
             blob_scale: 1.0 / 255.0,
             blob_name: "",
-            out_layers: out_layers,
-            filter_classes: filter_classes,
-            // size varies with input aspect ratio
-            letterbox_resized: Mat::default(),
+            out_layers,
+            filter_classes,
+            #[cfg(feature = "letterbox")]
+            letterbox_resized: Mat::default(),  // size varies with input aspect ratio
+            #[cfg(feature = "letterbox")]
             letterbox_padded,
         })
     }
     pub fn forward(&mut self, image: &Mat, conf_threshold: f32, nms_threshold: f32) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), Error>{
         let image_width = image.cols();
         let image_height = image.rows();
-        // Letterbox preprocessing: resize maintaining aspect ratio, then pad
-        let scale = f32::min(
-            self.input_size.width as f32 / image_width as f32,
-            self.input_size.height as f32 / image_height as f32
-        );
-        let new_width = (image_width as f32 * scale).round() as i32;
-        let new_height = (image_height as f32 * scale).round() as i32;
-        let pad_left = (self.input_size.width - new_width) / 2;
-        let pad_top = (self.input_size.height - new_height) / 2;
 
-        let blobimg = if image_width != self.input_size.width || image_height != self.input_size.height {
-            // Resize maintaining aspect ratio (reuses buffer if size matches)
-            resize(&image, &mut self.letterbox_resized, Size::new(new_width, new_height), 0.0, 0.0, INTER_LINEAR)?;
-            // Pad to target size with gray (114, 114, 114)
-            let pad_right = self.input_size.width - new_width - pad_left;
-            let pad_bottom = self.input_size.height - new_height - pad_top;
-            copy_make_border(
-                &self.letterbox_resized,
-                &mut self.letterbox_padded,
-                pad_top,
-                pad_bottom,
-                pad_left,
-                pad_right,
-                BORDER_CONSTANT,
-                Scalar::new(114.0, 114.0, 114.0, 0.0)
-            )?;
-            // Size(0,0) tells OpenCV to use padded's dimensions as-is (already correct after letterbox)
-            // See: https://github.com/opencv/opencv/blob/4.x/samples/dnn/object_detection.cpp#L54
-            blob_from_image(&self.letterbox_padded, self.blob_scale, Size::new(0, 0), self.blob_mean, true, false, CV_32F)?
-        } else {
-            blob_from_image(&image, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?
+        // Preprocessing and coordinate conversion factors depend on feature flag
+        #[cfg(feature = "letterbox")]
+        let (blobimg, scale, pad_left, pad_top) = {
+            // Letterbox preprocessing: resize maintaining aspect ratio, then pad
+            let scale = f32::min(
+                self.input_size.width as f32 / image_width as f32,
+                self.input_size.height as f32 / image_height as f32
+            );
+            let new_width = (image_width as f32 * scale).round() as i32;
+            let new_height = (image_height as f32 * scale).round() as i32;
+            let pad_left = (self.input_size.width - new_width) / 2;
+            let pad_top = (self.input_size.height - new_height) / 2;
+
+            let blob = if image_width != self.input_size.width || image_height != self.input_size.height {
+                // Resize maintaining aspect ratio (reuses buffer if size matches)
+                resize(&image, &mut self.letterbox_resized, Size::new(new_width, new_height), 0.0, 0.0, INTER_LINEAR)?;
+                // Pad to target size with gray (114, 114, 114)
+                let pad_right = self.input_size.width - new_width - pad_left;
+                let pad_bottom = self.input_size.height - new_height - pad_top;
+                copy_make_border(
+                    &self.letterbox_resized,
+                    &mut self.letterbox_padded,
+                    pad_top,
+                    pad_bottom,
+                    pad_left,
+                    pad_right,
+                    BORDER_CONSTANT,
+                    Scalar::new(114.0, 114.0, 114.0, 0.0)
+                )?;
+                // Size(0,0) tells OpenCV to use padded's dimensions as-is
+                blob_from_image(&self.letterbox_padded, self.blob_scale, Size::new(0, 0), self.blob_mean, true, false, CV_32F)?
+            } else {
+                blob_from_image(&image, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?
+            };
+            (blob, scale, pad_left, pad_top)
+        };
+
+        #[cfg(not(feature = "letterbox"))]
+        let (blobimg, scale_x, scale_y) = {
+            // Stretch preprocessing: direct resize to input_size (faster but may distort)
+            let scale_x = image_width as f32 / self.input_size.width as f32;
+            let scale_y = image_height as f32 / self.input_size.height as f32;
+            let blob = blob_from_image(&image, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?;
+            (blob, scale_x, scale_y)
         };
 
         let mut detections = Vector::<Mat>::new();
@@ -216,14 +239,30 @@ impl ModelUltralyticsV8 {
                     if self.filter_classes.len() > 0 && !self.filter_classes.contains(&max_class_index) {
                         continue;
                     }
-                    // Model outputs pixel coordinates in letterboxed input space
-                    // Convert back to original image coordinates:
-                    // 1. Subtract padding offset
-                    // 2. Divide by scale factor
-                    let x_center = (*object_data[0] - pad_left as f32) / scale;
-                    let y_center = (*object_data[1] - pad_top as f32) / scale;
-                    let width = *object_data[2] / scale;
-                    let height = *object_data[3] / scale;
+
+                    // Coordinate conversion: model outputs pixel coordinates in input space
+                    #[cfg(feature = "letterbox")]
+                    let (x_center, y_center, width, height) = {
+                        // Letterbox: subtract padding offset, divide by scale factor
+                        (
+                            (*object_data[0] - pad_left as f32) / scale,
+                            (*object_data[1] - pad_top as f32) / scale,
+                            *object_data[2] / scale,
+                            *object_data[3] / scale,
+                        )
+                    };
+
+                    #[cfg(not(feature = "letterbox"))]
+                    let (x_center, y_center, width, height) = {
+                        // Stretch: scale back from input_size to original image size
+                        (
+                            *object_data[0] * scale_x,
+                            *object_data[1] * scale_y,
+                            *object_data[2] * scale_x,
+                            *object_data[3] * scale_y,
+                        )
+                    };
+
                     // Convert from center to top-left corner
                     let bbox_cv = Rect::new(
                         (x_center - width / 2.0).round() as i32,
