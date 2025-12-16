@@ -188,6 +188,7 @@ impl ModelUltralyticsV8 {
                     Scalar::new(114.0, 114.0, 114.0, 0.0)
                 )?;
                 // Size(0,0) tells OpenCV to use padded's dimensions as-is
+                // See: https://github.com/opencv/opencv/blob/4.x/samples/dnn/object_detection.cpp#L54
                 blob_from_image(&self.letterbox_padded, self.blob_scale, Size::new(0, 0), self.blob_mean, true, false, CV_32F)?
             } else {
                 blob_from_image(&image, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?
