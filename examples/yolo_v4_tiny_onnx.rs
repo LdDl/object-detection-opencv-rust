@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use od_opencv::{model_classic::ModelYOLOClassic, model_format::ModelFormat};
 
 use opencv::{
@@ -11,6 +13,10 @@ use opencv::{
 };
 
 fn main() {
+    // Print OpenCV version
+    let cv_version = opencv::core::get_version_string().unwrap();
+    println!("OpenCV version: {}", cv_version);
+
     let classes_labels: Vec<&str> = vec!["car", "motorbike", "bus", "truck"];
     let mf = ModelFormat::ONNX;
     let net_width = 416;
@@ -32,7 +38,9 @@ fn main() {
         1,
     )
     .unwrap();
+    let start = Instant::now();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.75, 0.4).unwrap();
+    println!("Inference time: {:?}", start.elapsed());
     for (i, bbox) in bboxes.iter().enumerate() {
         rectangle(
             &mut frame,

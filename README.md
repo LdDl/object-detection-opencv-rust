@@ -17,6 +17,20 @@ This crate provides some basic structures and methods for solving object detecti
 | YOLO v8 m  | :x: (is it even possible?) | :white_check_mark: |
 | YOLO v8 l  | :x: (is it even possible?) | :white_check_mark: |
 | YOLO v8 x  | :x: (is it even possible?) | :white_check_mark: |
+| YOLO v9 t  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v9 s  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v9 m  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v9 c  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v9 e  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v11 n  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v11 s  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v11 m  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v11 l  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+| YOLO v11 x  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
+
+**Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. Requires OpenCV 4.11+ for best compatibility.
+
+**Note on YOLOv10:** YOLOv10's NMS-free architecture uses TopK layer which OpenCV DNN doesn't support. Use YOLOv8/v9/v11 instead, or export YOLOv10 with [patched ultralytics](https://gist.github.com/DarthSim/216551dfd58e5628290e90c1d358704b) that removes built-in NMS.
 
 ## Table of Contents
 
@@ -44,9 +58,17 @@ _- Why no YOLOv5?_
 
 I think there is a difference in postprocessing stuff between v8 and v5 versions. I need more time to investigate what should be done exactly to make v5 work.
 
+_- Why YOLOv10 doesn't work?_
+
+YOLOv10 introduced an "NMS-free" architecture where post-processing (TopK selection) is built into the model itself. Unfortunately, OpenCV's DNN module doesn't support the TopK ONNX operator, causing broken inference results. You have two options:
+1. Use YOLOv8/v9/v11 instead (recommended) - they work out of the box
+2. Export YOLOv10 with [patched ultralytics](https://gist.github.com/DarthSim/216551dfd58e5628290e90c1d358704b) that removes built-in NMS, then use `ModelUltralyticsV8` with manual NMS
+
 _- What OpenCV's version is tested?_
 
-I've tested it with v4.7.0. Rust bindings version: v0.66.0
+I've tested it with v4.11.0 - v4.12.0. Rust bindings version: v0.96.0
+
+For YOLOv9 support, OpenCV 4.11+ is recommended.
 
 _- Are wrapper structures thread safe?_
 
@@ -67,8 +89,18 @@ I'm not sure it is intended to be used in multiple threads (PR's are welcome). B
     * YOLO v8 medium (m) - [download_v8_m.sh](download_v8_m.sh).
     * YOLO v8 large (l) - [download_v8_l.sh](download_v8_l.sh).
     * YOLO v8 extra (x) - [download_v8_x.sh](download_v8_x.sh).
+    * YOLO v9 tiny (t) - [download_v9_t.sh](download_v9_t.sh).
+    * YOLO v9 small (s) - [download_v9_s.sh](download_v9_s.sh).
+    * YOLO v9 medium (m) - [download_v9_m.sh](download_v9_m.sh).
+    * YOLO v9 compact (c) - [download_v9_c.sh](download_v9_c.sh).
+    * YOLO v9 extended (e) - [download_v9_e.sh](download_v9_e.sh).
+    * YOLO v11 nano (n) - [download_v11_n.sh](download_v11_n.sh).
+    * YOLO v11 small (s) - [download_v11_s.sh](download_v11_s.sh).
+    * YOLO v11 medium (m) - [download_v11_m.sh](download_v11_m.sh).
+    * YOLO v11 large (l) - [download_v11_l.sh](download_v11_l.sh).
+    * YOLO v11 extra (x) - [download_v11_x.sh](download_v11_x.sh).
 
-    __Notice that "v8" script downloads Pytorch-based weights and converts it into ONNX one via `ultralytics` package for Python.__
+    __Notice that "v8/v9/v11" scripts download Pytorch-based weights and convert them into ONNX via `ultralytics` package for Python.__
     
 ## Usage
 
@@ -184,8 +216,10 @@ od_opencv = { version = "0.3", features = ["letterbox"] }
 * YOLO v3 paper - https://arxiv.org/abs/1804.02767, Joseph Redmon, Ali Farhadi
 * YOLO v4 paper - https://arxiv.org/abs/2004.10934, Alexey Bochkovskiy, Chien-Yao Wang, Hong-Yuan Mark Liao
 * YOLO v7 paper - https://arxiv.org/abs/2207.02696, Chien-Yao Wang, Alexey Bochkovskiy, Hong-Yuan Mark Liao
+* YOLO v9 paper - https://arxiv.org/abs/2402.13616, Chien-Yao Wang, I-Hau Yeh, Hong-Yuan Mark Liao
+* YOLO v10 paper - https://arxiv.org/abs/2405.14458, Ao Wang, Hui Chen, Lihao Liu, Kai Chen, Zijia Lin, Jungong Han, Guiguang Ding
 * Original Darknet YOLO repository - https://github.com/pjreddie/darknet
 * Most popular fork of Darknet YOLO - https://github.com/AlexeyAB/darknet
-* Developers of YOLOv8 - https://github.com/ultralytics/ultralytics. If you are aware of some original papers for YOLOv8 architecture, please contact me to mention it in this README.
+* Developers of YOLOv8/v11 - https://github.com/ultralytics/ultralytics
 * Rust OpenCV's bindings - https://github.com/twistedfall/opencv-rust
 * Go OpenCV's bindings (for ready-to-go Makefile) - https://github.com/hybridgroup/gocv

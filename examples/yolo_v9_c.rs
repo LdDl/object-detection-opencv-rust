@@ -24,18 +24,32 @@ fn main() {
     let mf = ModelFormat::ONNX;
     let net_width = 640;
     let net_height = 640;
-    // let class_filters: Vec<usize> = vec![15, 16];
-    let class_filters: Vec<usize> = vec![];
-    let mut model = ModelUltralyticsV8::new_from_file("pretrained/yolov8l.onnx", None, (net_width, net_height), mf, DNN_BACKEND_CUDA, DNN_TARGET_CUDA, vec![]).unwrap();
+    // let class_filters: Vec<usize> = vec![15, 16]; // filter specific classes
+    let class_filters: Vec<usize> = vec![]; // empty = all classes
+
+    // YOLOv9 uses the same output format as YOLOv8: [1, 84, 8400]
+    // So we can use ModelUltralyticsV8 directly
+    let mut model = ModelUltralyticsV8::new_from_file(
+        "pretrained/yolov9c.onnx",
+        None,
+        (net_width, net_height),
+        mf,
+        DNN_BACKEND_CUDA,
+        DNN_TARGET_CUDA,
+        class_filters
+    ).unwrap();
+
     let mut frame = imread("images/dog.jpg", 1).unwrap();
     let start = Instant::now();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
     println!("Inference time: {:?}", start.elapsed());
+
     for (i, bbox) in bboxes.iter().enumerate() {
         rectangle(&mut frame, *bbox, Scalar::from((0.0, 255.0, 0.0)), 2, LINE_4, 0).unwrap();
         println!("Class: {}", classes_labels[class_ids[i]]);
         println!("\tBounding box: {:?}", bbox);
         println!("\tConfidences: {}", confidences[i]);
     }
-    imwrite("images/dog_yolov8_l.jpg", &frame, &Vector::new()).unwrap();
+
+    imwrite("images/dog_yolov9_c.jpg", &frame, &Vector::new()).unwrap();
 }
