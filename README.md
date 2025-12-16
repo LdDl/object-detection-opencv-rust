@@ -28,7 +28,7 @@ This crate provides some basic structures and methods for solving object detecti
 | YOLO v11 l  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
 | YOLO v11 x  | :x: | :white_check_mark: (uses `ModelUltralyticsV8`) |
 
-**Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. Requires OpenCV 4.10+ for best compatibility.
+**Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. Requires OpenCV 4.11+ for best compatibility.
 
 **Note on YOLOv10:** YOLOv10's NMS-free architecture uses TopK layer which OpenCV DNN doesn't support. Use YOLOv8/v9/v11 instead, or export YOLOv10 with [patched ultralytics](https://gist.github.com/DarthSim/216551dfd58e5628290e90c1d358704b) that removes built-in NMS.
 

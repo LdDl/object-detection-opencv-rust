@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use od_opencv::{model_classic::ModelYOLOClassic, model_format::ModelFormat};
 
 use opencv::{
@@ -32,7 +34,9 @@ fn main() {
         1,
     )
     .unwrap();
+    let start = Instant::now();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.75, 0.4).unwrap();
+    println!("Inference time: {:?}", start.elapsed());
     for (i, bbox) in bboxes.iter().enumerate() {
         rectangle(
             &mut frame,
