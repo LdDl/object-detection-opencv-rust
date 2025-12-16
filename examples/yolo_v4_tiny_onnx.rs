@@ -13,6 +13,10 @@ use opencv::{
 };
 
 fn main() {
+    // Print OpenCV version
+    let cv_version = opencv::core::get_version_string().unwrap();
+    println!("OpenCV version: {}", cv_version);
+
     let classes_labels: Vec<&str> = vec!["car", "motorbike", "bus", "truck"];
     let mf = ModelFormat::ONNX;
     let net_width = 416;
