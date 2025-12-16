@@ -23,6 +23,7 @@ This crate provides some basic structures and methods for solving object detecti
 - [About](#about)
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
+- [Features](#features)
 - [References](#references)
 
 ## About
@@ -161,6 +162,23 @@ There are some [examples](examples), but let me guide you step-by-step
     ```
 
 7. If anything is going wrong, feel free to [open an issue](https://github.com/LdDl/object-detection-opencv-rust/issues/new)
+
+## Features
+
+### Letterbox Preprocessing
+
+For non-traditional YOLO models (specifically v8 - `ModelUltralyticsV8`), you can enable letterbox preprocessing which maintains aspect ratio during resize and pads with gray borders. This matches the preprocessing used during Ultralytics training.
+
+To enable letterbox, add the feature to your `Cargo.toml`:
+
+```toml
+[dependencies]
+od_opencv = { version = "0.3", features = ["letterbox"] }
+```
+
+**Without letterbox (default):** Images are stretched to the network input size. This may introduce aspect ratio distortion.
+
+**With letterbox:** Images are resized maintaining aspect ratio, then padded to the target size. This preserves the original aspect ratio and can be faster due to optimized buffer reuse.
 
 ## References
 * YOLO v3 paper - https://arxiv.org/abs/1804.02767, Joseph Redmon, Ali Farhadi
