@@ -9,13 +9,16 @@ use opencv::{
     core::Vector,
     core::Rect,
     core::CV_32F,
+    core::CV_8UC3,
+    core::BORDER_CONSTANT,
+    core::copy_make_border,
     dnn::read_net,
     dnn::read_net_from_onnx,
     dnn::blob_from_image,
     dnn::nms_boxes,
     dnn::Net,
     imgproc::resize,
-    imgproc::INTER_AREA,
+    imgproc::INTER_LINEAR,
     Error
 };
 
@@ -43,8 +46,12 @@ pub struct ModelUltralyticsV8 {
     blob_name: &'static str,
     // Layers to aggregate results from (for some models there could me multiple YOLO layers)
     out_layers: Vector<String>,
-    // Set of classes which will be used to filter detections 
-    filter_classes: Vec<usize>
+    // Set of classes which will be used to filter detections
+    filter_classes: Vec<usize>,
+    // Reusable buffer for letterbox resize (avoids allocation per frame)
+    letterbox_resized: Mat,
+    // Reusable buffer for letterbox padding (avoids allocation per frame)
+    letterbox_padded: Mat,
 }
 
 impl ModelUltralyticsV8 {
@@ -117,6 +124,14 @@ impl ModelUltralyticsV8 {
         neural_net.set_preferable_backend(backend_id)?;
         neural_net.set_preferable_target(target_id)?;
         let out_layers = neural_net.get_unconnected_out_layers_names()?;
+        // Pre-allocate letterbox_padded with known target size (width x height, 3 channels)
+        let letterbox_padded = Mat::new_rows_cols_with_default(
+            net_size.1,  // height
+            net_size.0,  // width
+            CV_8UC3,
+            Scalar::new(114.0, 114.0, 114.0, 0.0)  // gray padding color
+        )?;
+
         Ok(Self{
             net: neural_net,
             input_size: Size::new(net_size.0, net_size.1),
@@ -124,25 +139,48 @@ impl ModelUltralyticsV8 {
             blob_scale: 1.0 / 255.0,
             blob_name: "",
             out_layers: out_layers,
-            filter_classes: filter_classes
+            filter_classes: filter_classes,
+            // size varies with input aspect ratio
+            letterbox_resized: Mat::default(),
+            letterbox_padded,
         })
     }
     pub fn forward(&mut self, image: &Mat, conf_threshold: f32, nms_threshold: f32) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), Error>{
         let image_width = image.cols();
         let image_height = image.rows();
-        let x_factor = image_width as f32 / self.input_size.width as f32;
-        let y_factor =  image_height as f32 / self.input_size.height as f32;
-        let need_to_resize = image_width != self.input_size.width || image_height != self.input_size.height;
-        let blobimg = match need_to_resize {
-            true => {
-                let mut resized_frame: Mat = Mat::default();
-                resize(&image, &mut resized_frame, self.input_size, 1.0, 1.0, INTER_AREA)?;
-                blob_from_image(&resized_frame, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?
-            },
-            false => {
-                blob_from_image(&image, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?
-            }
+        // Letterbox preprocessing: resize maintaining aspect ratio, then pad
+        let scale = f32::min(
+            self.input_size.width as f32 / image_width as f32,
+            self.input_size.height as f32 / image_height as f32
+        );
+        let new_width = (image_width as f32 * scale).round() as i32;
+        let new_height = (image_height as f32 * scale).round() as i32;
+        let pad_left = (self.input_size.width - new_width) / 2;
+        let pad_top = (self.input_size.height - new_height) / 2;
+
+        let blobimg = if image_width != self.input_size.width || image_height != self.input_size.height {
+            // Resize maintaining aspect ratio (reuses buffer if size matches)
+            resize(&image, &mut self.letterbox_resized, Size::new(new_width, new_height), 0.0, 0.0, INTER_LINEAR)?;
+            // Pad to target size with gray (114, 114, 114)
+            let pad_right = self.input_size.width - new_width - pad_left;
+            let pad_bottom = self.input_size.height - new_height - pad_top;
+            copy_make_border(
+                &self.letterbox_resized,
+                &mut self.letterbox_padded,
+                pad_top,
+                pad_bottom,
+                pad_left,
+                pad_right,
+                BORDER_CONSTANT,
+                Scalar::new(114.0, 114.0, 114.0, 0.0)
+            )?;
+            // Size(0,0) tells OpenCV to use padded's dimensions as-is (already correct after letterbox)
+            // See: https://github.com/opencv/opencv/blob/4.x/samples/dnn/object_detection.cpp#L54
+            blob_from_image(&self.letterbox_padded, self.blob_scale, Size::new(0, 0), self.blob_mean, true, false, CV_32F)?
+        } else {
+            blob_from_image(&image, self.blob_scale, self.input_size, self.blob_mean, true, false, CV_32F)?
         };
+
         let mut detections = Vector::<Mat>::new();
         self.net.set_input(&blobimg, self.blob_name, 1.0, self.blob_mean)?;
         self.net.forward(&mut detections, &self.out_layers)?;
@@ -151,7 +189,7 @@ impl ModelUltralyticsV8 {
         let mut bboxes = Vector::<Rect>::new();
         let mut confidences = Vector::<f32>::new();
         let mut class_ids = Vec::new();
-        
+
         // Specific to YOLOv8 reading detections vector
         // See the ref. https://github.com/ultralytics/ultralytics/blob/main/examples/YOLOv8-OpenCV-ONNX-Python/main.py#L65
         for layer in detections {
@@ -178,14 +216,21 @@ impl ModelUltralyticsV8 {
                     if self.filter_classes.len() > 0 && !self.filter_classes.contains(&max_class_index) {
                         continue;
                     }
-                    // Calculate box coordinates
-                    let bbox: [i32; 4] = [
-                        ((object_data[0] - (0.5 * object_data[2])) * x_factor).round() as i32,
-                        ((object_data[1] - (0.5 * object_data[3])) * y_factor).round() as i32,
-                        (*object_data[2] * x_factor).round() as i32,
-                        (*object_data[3] * y_factor).round() as i32,
-                    ];
-                    let bbox_cv = Rect::new(bbox[0], bbox[1], bbox[2], bbox[3]);
+                    // Model outputs pixel coordinates in letterboxed input space
+                    // Convert back to original image coordinates:
+                    // 1. Subtract padding offset
+                    // 2. Divide by scale factor
+                    let x_center = (*object_data[0] - pad_left as f32) / scale;
+                    let y_center = (*object_data[1] - pad_top as f32) / scale;
+                    let width = *object_data[2] / scale;
+                    let height = *object_data[3] / scale;
+                    // Convert from center to top-left corner
+                    let bbox_cv = Rect::new(
+                        (x_center - width / 2.0).round() as i32,
+                        (y_center - height / 2.0).round() as i32,
+                        width.round() as i32,
+                        height.round() as i32
+                    );
                     bboxes.push(bbox_cv);
                     confidences.push(max_score);
                     class_ids.push(max_class_index);
@@ -195,7 +240,7 @@ impl ModelUltralyticsV8 {
         // Run NMS on collected detections to filter duplicates and overlappings
         let mut indices = Vector::<i32>::new();
         nms_boxes(&bboxes, &confidences, conf_threshold, nms_threshold, &mut indices, 1.0, 0)?;
-        
+
         let mut nms_bboxes = vec![];
         let mut nms_classes_ids = vec![];
         let mut nms_confidences = vec![];
@@ -205,11 +250,11 @@ impl ModelUltralyticsV8 {
         nms_bboxes.extend(bboxes.drain(..)
             .enumerate()
             .filter_map(|(idx, item)| if indices_vec.contains(&(idx as i32)) {Some(item)} else {None}));
-        
+
         nms_classes_ids.extend(class_ids.drain(..)
             .enumerate()
             .filter_map(|(idx, item)| if indices_vec.contains(&(idx as i32)) {Some(item)} else {None}));
-        
+
         nms_confidences.extend(confidences.to_vec().drain(..)
             .enumerate()
             .filter_map(|(idx, item)| if indices_vec.contains(&(idx as i32)) {Some(item)} else {None}));
