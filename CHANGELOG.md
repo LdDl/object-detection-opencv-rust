@@ -11,6 +11,16 @@ All notable changes to this set of object detection utils will be documented in 
 
 ### Added
 
+- **Factory pattern API** (`Model` struct): simplified model instantiation
+  - `Model::opencv()` for Ultralytics models (YOLOv8/v9/v11) with OpenCV backend
+  - `Model::darknet()` for traditional YOLO (v3/v4/v7) in Darknet format
+  - `Model::classic_onnx()` for classic YOLO models exported to ONNX
+  - `Model::ort()` for Ultralytics models with ORT backend
+  - `Model::ort_cuda()` for ORT backend with CUDA acceleration
+- **DnnBackend and DnnTarget enums** (`src/dnn_backend.rs`): type-safe OpenCV DNN configuration
+  - Import from `od_opencv` instead of `opencv::dnn`
+  - Available backends: `Default`, `OpenCV`, `InferenceEngine`, `Halide`, `Cuda`
+  - Available targets: `Cpu`, `OpenCL`, `OpenCLFp16`, `Myriad`, `Fpga`, `Cuda`, `CudaFp16`, `Hddl`
 - **ORT backend** (`ort-backend` feature): pure Rust inference using ONNX Runtime
   - `ModelUltralyticsOrt` for YOLOv8/v9/v11 models
   - No OpenCV installation required
@@ -20,6 +30,10 @@ All notable changes to this set of object detection utils will be documented in 
 - **Shared post-processing** (`src/postprocess.rs`): backend-agnostic NMS implementation
 - **ImageBuffer type** (`src/image_buffer.rs`): common image wrapper for both backends
 - **BBox type** (`src/bbox.rs`): backend-agnostic bounding box with conversions
+
+### Important Notes
+
+- **CUDA conflict warning**: Do not enable both ORT and OpenCV backends simultaneously when using CUDA. Always use `default-features = false` when enabling `opencv-backend` to avoid segmentation faults.
 
 ### Migration Guide
 
