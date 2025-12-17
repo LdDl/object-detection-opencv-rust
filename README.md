@@ -92,6 +92,12 @@ This crate supports two inference backends:
 | `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv8/v9/v11 (ONNX) |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions |
 
+**Warning: CUDA Conflict**
+
+Do not enable both `ort-backend` (or `ort-cuda-backend`) and `opencv-backend` simultaneously when using CUDA acceleration. The CUDA initialization from ORT and OpenCV can conflict, causing segmentation faults at runtime.
+
+Always use `default-features = false` when enabling `opencv-backend` to disable the default ORT backend.
+
 ### Choosing a Backend
 
 ```toml
@@ -152,7 +158,21 @@ Tested with OpenCV v4.11.0 - v4.12.0. Rust bindings version: v0.96.0
     
 ## Usage
 
-There are some [examples](examples), but let me guide you step-by-step
+There are some [examples](examples), but let me guide you step-by-step.
+
+### Running Examples
+
+```bash
+# ORT backend examples (default)
+cargo run --example yolo_v8_n_ort --release
+cargo run --example yolo_v8_n_ort_cuda --release --features=ort-cuda-backend
+
+# OpenCV backend examples - IMPORTANT: use --no-default-features to avoid CUDA conflicts
+cargo run --example yolo_v4_tiny --release --no-default-features --features=opencv-backend
+cargo run --example yolo_v8_n --release --no-default-features --features=opencv-backend
+```
+
+> **Note:** When running OpenCV backend examples, always use `--no-default-features` to disable the ORT backend. Without this flag, both backends will be loaded which can cause segmentation faults when using CUDA
 
 ### ORT Backend (Default)
 
@@ -276,12 +296,21 @@ The OpenCV backend is required for Darknet models (v3/v4/v7) and provides access
         imgcodecs::imwrite,
         imgproc::LINE_4,
         imgproc::rectangle,
-        dnn::DNN_BACKEND_CUDA, // I will utilize my GPU to perform faster inference. Your way may vary
-        dnn::DNN_TARGET_CUDA,
     };
     ```
 
-5. Import crate
+5. Import crate (choose one approach):
+
+    **Option A: Factory pattern (recommended)**
+    ```rust
+    use od_opencv::{
+        Model,
+        DnnBackend, // I will utilize my GPU to perform faster inference. Your way may vary
+        DnnTarget
+    };
+    ```
+
+    **Option B: Direct struct access**
     ```rust
     use od_opencv::{
         model_format::ModelFormat,
@@ -290,10 +319,45 @@ The OpenCV backend is required for Darknet models (v3/v4/v7) and provides access
         // model_classic::ModelYOLOClassic
         model_ultralytics::ModelUltralyticsV8
     };
+    use opencv::dnn::{
+        DNN_BACKEND_CUDA, // I will utilize my GPU to perform faster inference. Your way may vary
+        DNN_TARGET_CUDA
+    };
     ```
 
 6. Prepare model
 
+    **Option A: Factory pattern (recommended)**
+    ```rust
+    // Define classes (in this case we consider 80 COCO labels)
+    let classes_labels: Vec<&str> = vec!["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"];
+
+    // Initialize model using factory pattern
+    let mut model = Model::opencv(
+        "pretrained/yolov8n.onnx",
+        (640, 640),
+        DnnBackend::Cuda,
+        DnnTarget::Cuda,
+    ).unwrap();
+
+    // Read image into the OpenCV's Mat object
+    let mut frame = imread("images/dog.jpg", 1).unwrap();
+
+    // Feed forward image through the model
+    let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
+
+    // Process results
+    for (i, bbox) in bboxes.iter().enumerate() {
+        rectangle(&mut frame, *bbox, Scalar::from((0.0, 255.0, 0.0)), 2, LINE_4, 0).unwrap();
+        println!("Class: {}", classes_labels[class_ids[i]]);
+        println!("\tBounding box: {:?}", bbox);
+        println!("\tConfidences: {}", confidences[i]);
+    }
+
+    imwrite("images/dog_yolov8_n.jpg", &frame, &Vector::new()).unwrap();
+    ```
+
+    **Option B: Direct struct access**
     ```rust
     // Define classes (in this case we consider 80 COCO labels)
     let classes_labels: Vec<&str> = vec!["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"];
@@ -337,7 +401,7 @@ The OpenCV backend is required for Darknet models (v3/v4/v7) and provides access
 
 7. You are good to go
     ```shell
-    cargo run
+    cargo run --no-default-features --features=opencv-backend
     ```
 
 8. If anything is going wrong, feel free to [open an issue](https://github.com/LdDl/object-detection-opencv-rust/issues/new)

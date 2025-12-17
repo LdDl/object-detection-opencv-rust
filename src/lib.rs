@@ -38,6 +38,13 @@ pub mod backend_opencv;
 #[cfg(feature = "ort-backend")]
 pub mod backend_ort;
 
+// DNN backend/target enums for opencv-backend
+#[cfg(feature = "opencv-backend")]
+pub mod dnn_backend;
+
+#[cfg(feature = "opencv-backend")]
+pub use dnn_backend::{DnnBackend, DnnTarget};
+
 // Backwards-compatible re-exports for opencv-backend
 // which allows existing code using
 // `od_opencv::model_ultralytics::...` to still work

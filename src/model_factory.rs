@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use od_opencv::Model;
+//! use od_opencv::{Model, DnnBackend, DnnTarget};
 //!
 //! // ORT backend (CPU)
 //! let model = Model::ort("yolov8n.onnx", (640, 640))?;
@@ -15,11 +15,11 @@
 //! // ORT backend with CUDA
 //! let model = Model::ort_cuda("yolov8n.onnx", (640, 640))?;
 //!
-//! // OpenCV backend for Ultralytics models
-//! let model = Model::opencv("yolov8n.onnx", (640, 640))?;
+//! // OpenCV backend for Ultralytics models (CUDA)
+//! let model = Model::opencv("yolov8n.onnx", (640, 640), DnnBackend::Cuda, DnnTarget::Cuda)?;
 //!
-//! // OpenCV backend for Darknet models
-//! let model = Model::darknet("yolov4.cfg", "yolov4.weights", (416, 416))?;
+//! // OpenCV backend for Darknet models (CUDA)
+//! let model = Model::darknet("yolov4.cfg", "yolov4.weights", (416, 416), DnnBackend::Cuda, DnnTarget::Cuda)?;
 //! ```
 
 /// Factory for creating object detection models.
@@ -132,106 +132,180 @@ impl Model {
 impl Model {
     /// Creates a new Ultralytics YOLO model (v8/v9/v11) using OpenCV DNN.
     ///
-    /// Uses default CPU backend and target.
-    ///
     /// # Arguments
     /// * `model_path` - Path to the ONNX model file
     /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend (e.g., `DnnBackend::Cuda`, `DnnBackend::OpenCV`)
+    /// * `target` - DNN target device (e.g., `DnnTarget::Cuda`, `DnnTarget::Cpu`)
     ///
     /// # Example
     /// ```ignore
-    /// let mut model = Model::opencv("yolov8n.onnx", (640, 640))?;
+    /// use od_opencv::{Model, DnnBackend, DnnTarget};
+    ///
+    /// // CUDA inference
+    /// let mut model = Model::opencv("yolov8n.onnx", (640, 640), DnnBackend::Cuda, DnnTarget::Cuda)?;
+    ///
+    /// // CPU inference
+    /// let mut model = Model::opencv("yolov8n.onnx", (640, 640), DnnBackend::OpenCV, DnnTarget::Cpu)?;
     /// ```
     pub fn opencv(
         model_path: &str,
         input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
     ) -> Result<crate::backend_opencv::model_ultralytics::ModelUltralyticsV8, opencv::Error> {
-        use opencv::dnn::{DNN_BACKEND_OPENCV, DNN_TARGET_CPU};
         crate::backend_opencv::model_ultralytics::ModelUltralyticsV8::new_from_onnx_file(
             model_path,
             input_size,
-            DNN_BACKEND_OPENCV,
-            DNN_TARGET_CPU,
+            backend.into(),
+            target.into(),
             vec![],
         )
     }
 
-    /// Creates a new Ultralytics YOLO model with custom backend/target using OpenCV DNN.
+    /// Creates a new Ultralytics YOLO model with class filtering using OpenCV DNN.
     ///
     /// # Arguments
     /// * `model_path` - Path to the ONNX model file
     /// * `input_size` - Model input size as (width, height)
-    /// * `backend_id` - OpenCV DNN backend (e.g., DNN_BACKEND_OPENCV, DNN_BACKEND_CUDA)
-    /// * `target_id` - OpenCV DNN target (e.g., DNN_TARGET_CPU, DNN_TARGET_CUDA)
+    /// * `backend` - DNN backend
+    /// * `target` - DNN target device
     /// * `class_filters` - List of class indices to detect (empty for all)
-    pub fn opencv_with_backend(
+    pub fn opencv_filtered(
         model_path: &str,
         input_size: (i32, i32),
-        backend_id: i32,
-        target_id: i32,
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
         class_filters: Vec<usize>,
     ) -> Result<crate::backend_opencv::model_ultralytics::ModelUltralyticsV8, opencv::Error> {
         crate::backend_opencv::model_ultralytics::ModelUltralyticsV8::new_from_onnx_file(
             model_path,
             input_size,
-            backend_id,
-            target_id,
+            backend.into(),
+            target.into(),
             class_filters,
         )
     }
 
     /// Creates a new classic YOLO model (v3/v4/v7) from Darknet files using OpenCV DNN.
     ///
-    /// Uses default CPU backend and target.
-    ///
     /// # Arguments
     /// * `cfg_path` - Path to the Darknet .cfg file
     /// * `weights_path` - Path to the Darknet .weights file
     /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend
+    /// * `target` - DNN target device
     ///
     /// # Example
     /// ```ignore
-    /// let mut model = Model::darknet("yolov4.cfg", "yolov4.weights", (416, 416))?;
+    /// use od_opencv::{Model, DnnBackend, DnnTarget};
+    ///
+    /// let mut model = Model::darknet(
+    ///     "yolov4.cfg",
+    ///     "yolov4.weights",
+    ///     (416, 416),
+    ///     DnnBackend::Cuda,
+    ///     DnnTarget::Cuda
+    /// )?;
     /// ```
     pub fn darknet(
         cfg_path: &str,
         weights_path: &str,
         input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
     ) -> Result<crate::backend_opencv::model_classic::ModelYOLOClassic, opencv::Error> {
-        use opencv::dnn::{DNN_BACKEND_OPENCV, DNN_TARGET_CPU};
         crate::backend_opencv::model_classic::ModelYOLOClassic::new_from_darknet_file(
             weights_path,
             cfg_path,
             input_size,
-            DNN_BACKEND_OPENCV,
-            DNN_TARGET_CPU,
+            backend.into(),
+            target.into(),
             vec![],
         )
     }
 
-    /// Creates a new classic YOLO model with custom backend/target using OpenCV DNN.
+    /// Creates a new classic YOLO model with class filtering from Darknet files using OpenCV DNN.
     ///
     /// # Arguments
     /// * `cfg_path` - Path to the Darknet .cfg file
     /// * `weights_path` - Path to the Darknet .weights file
     /// * `input_size` - Model input size as (width, height)
-    /// * `backend_id` - OpenCV DNN backend
-    /// * `target_id` - OpenCV DNN target
+    /// * `backend` - DNN backend
+    /// * `target` - DNN target device
     /// * `class_filters` - List of class indices to detect (empty for all)
-    pub fn darknet_with_backend(
+    pub fn darknet_filtered(
         cfg_path: &str,
         weights_path: &str,
         input_size: (i32, i32),
-        backend_id: i32,
-        target_id: i32,
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
         class_filters: Vec<usize>,
     ) -> Result<crate::backend_opencv::model_classic::ModelYOLOClassic, opencv::Error> {
         crate::backend_opencv::model_classic::ModelYOLOClassic::new_from_darknet_file(
             weights_path,
             cfg_path,
             input_size,
-            backend_id,
-            target_id,
+            backend.into(),
+            target.into(),
+            class_filters,
+        )
+    }
+
+    /// Creates a new classic YOLO model (v3/v4/v7) from ONNX file using OpenCV DNN.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend
+    /// * `target` - DNN target device
+    ///
+    /// # Example
+    /// ```ignore
+    /// use od_opencv::{Model, DnnBackend, DnnTarget};
+    ///
+    /// let mut model = Model::classic_onnx(
+    ///     "yolov4-tiny.onnx",
+    ///     (416, 416),
+    ///     DnnBackend::Cuda,
+    ///     DnnTarget::Cuda
+    /// )?;
+    /// ```
+    pub fn classic_onnx(
+        model_path: &str,
+        input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
+    ) -> Result<crate::backend_opencv::model_classic::ModelYOLOClassic, opencv::Error> {
+        crate::backend_opencv::model_classic::ModelYOLOClassic::new_from_onnx_file(
+            model_path,
+            input_size,
+            backend.into(),
+            target.into(),
+            vec![],
+        )
+    }
+
+    /// Creates a new classic YOLO model with class filtering from ONNX using OpenCV DNN.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend
+    /// * `target` - DNN target device
+    /// * `class_filters` - List of class indices to detect (empty for all)
+    pub fn classic_onnx_filtered(
+        model_path: &str,
+        input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_opencv::model_classic::ModelYOLOClassic, opencv::Error> {
+        crate::backend_opencv::model_classic::ModelYOLOClassic::new_from_onnx_file(
+            model_path,
+            input_size,
+            backend.into(),
+            target.into(),
             class_filters,
         )
     }
