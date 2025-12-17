@@ -149,6 +149,70 @@ impl ImageBuffer {
     }
 }
 
+// image crate conversions - available with ort-backend feature
+#[cfg(feature = "ort-backend")]
+mod image_impl {
+    use super::*;
+    use image::{DynamicImage, RgbImage};
+
+    impl ImageBuffer {
+        /// Creates an ImageBuffer from an `image::DynamicImage`.
+        pub fn from_dynamic_image(img: DynamicImage) -> Self {
+            let rgb = img.to_rgb8();
+            let (width, height) = rgb.dimensions();
+            let raw = rgb.into_raw();
+
+            // Convert from flat RGB to HWC ndarray
+            let data = Array3::from_shape_vec(
+                (height as usize, width as usize, 3),
+                raw,
+            )
+            .expect("Shape mismatch when converting DynamicImage to ImageBuffer");
+
+            Self { data }
+        }
+
+        /// Creates an ImageBuffer from an `image::RgbImage`.
+        pub fn from_rgb_image(img: RgbImage) -> Self {
+            let (width, height) = img.dimensions();
+            let raw = img.into_raw();
+
+            let data = Array3::from_shape_vec(
+                (height as usize, width as usize, 3),
+                raw,
+            )
+            .expect("Shape mismatch when converting RgbImage to ImageBuffer");
+
+            Self { data }
+        }
+
+        /// Converts the ImageBuffer to an `image::RgbImage`.
+        pub fn to_rgb_image(&self) -> RgbImage {
+            let (height, width, _) = self.shape();
+            let raw: Vec<u8> = self.data.iter().cloned().collect();
+            RgbImage::from_raw(width as u32, height as u32, raw)
+                .expect("Failed to convert ImageBuffer to RgbImage")
+        }
+
+        /// Converts the ImageBuffer to an `image::DynamicImage`.
+        pub fn to_dynamic_image(&self) -> DynamicImage {
+            DynamicImage::ImageRgb8(self.to_rgb_image())
+        }
+    }
+
+    impl From<DynamicImage> for ImageBuffer {
+        fn from(img: DynamicImage) -> Self {
+            Self::from_dynamic_image(img)
+        }
+    }
+
+    impl From<RgbImage> for ImageBuffer {
+        fn from(img: RgbImage) -> Self {
+            Self::from_rgb_image(img)
+        }
+    }
+}
+
 // OpenCV conversions - available with opencv-backend feature
 #[cfg(feature = "opencv-backend")]
 mod opencv_impl {

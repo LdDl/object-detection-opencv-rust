@@ -30,7 +30,16 @@ categories = [
 
 [features]
 default = ["opencv-backend"]
+
+# Backend features - user should choose one
 opencv-backend = ["dep:opencv"]
+ort-backend = ["dep:ort", "dep:image"]
+
+# GPU acceleration for ort-backend
+ort-cuda-backend = ["ort-backend", "ort/cuda"]
+ort-tensorrt-backend = ["ort-backend", "ort/tensorrt"]
+
+# Preprocessing options
 letterbox = []
 
 [lib]
@@ -132,10 +141,25 @@ required-features = ["opencv-backend"]
 name = "yolo_v11_x"
 required-features = ["opencv-backend"]
 
+# YOLOv8 examples (ort-backend)
+[[example]]
+name = "yolo_v8_s_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v8_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
 [dependencies]
 lazy_static = "1.5.0"
-ndarray = "0.17.1"
+ndarray = "0.16"
+
+# OpenCV backend
 opencv = { version = "0.96.0", default-features = false, features = ["dnn", "imgcodecs", "imgproc"], optional = true }
+
+# ORT (ONNX runtime) backend
+ort = { version = "2.0.0-rc.10", optional = true }
+image = { version = "0.25", optional = true }
 
 [patch.crates-io]
 cc = { git = "https://github.com/rust-lang/cc-rs.git", version = "1.0", tag = "1.0.79" }
