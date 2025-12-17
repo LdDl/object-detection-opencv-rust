@@ -10,7 +10,7 @@ keywords = [
   "yolo-v8",
 ]
 license = "MIT"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -134,6 +134,7 @@ required-features = ["opencv-backend"]
 
 [dependencies]
 lazy_static = "1.5.0"
+ndarray = "0.17.1"
 opencv = { version = "0.96.0", default-features = false, features = ["dnn", "imgcodecs", "imgproc"], optional = true }
 
 [patch.crates-io]

@@ -320,3 +320,17 @@ impl ModelTrait for ModelUltralyticsV8 {
         self.forward(image, conf_threshold, nms_threshold)
     }
 }
+
+impl crate::ObjectDetector for ModelUltralyticsV8 {
+    type Input = Mat;
+    type Error = Error;
+
+    fn detect(
+        &mut self,
+        input: &Self::Input,
+        conf_threshold: f32,
+        nms_threshold: f32,
+    ) -> Result<(Vec<BBox>, Vec<usize>, Vec<f32>), Self::Error> {
+        self.forward_bbox(input, conf_threshold, nms_threshold)
+    }
+}
