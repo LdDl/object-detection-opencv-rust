@@ -14,43 +14,22 @@ fn main() {
     let net_width = 640;
     let net_height = 640;
 
-    // Load model using ORT backend
-    println!("Loading model...");
     let mut model = ModelUltralyticsOrt::new_from_file(
         "pretrained/yolov8s.onnx",
         (net_width, net_height),
-        vec![],  // no class filters
+        vec![],
     ).expect("Failed to load model");
 
-    // Load image using the image crate
-    println!("Loading image...");
     let img = image::open("images/dog.jpg").expect("Failed to load image");
     let img_buffer = ImageBuffer::from_dynamic_image(img);
 
-    // Warmup run
-    println!("Warmup run...");
-    let _ = model.forward(&img_buffer, 0.25, 0.4).expect("Warmup failed");
-
-    // Run inference multiple times
-    println!("Running inference (10 iterations)...");
     let start = Instant::now();
-    let mut result = None;
-    for _ in 0..10 {
-        result = Some(model.forward(&img_buffer, 0.25, 0.4).expect("Inference failed"));
-    }
-    let elapsed = start.elapsed();
-    println!("Total time: {:?}", elapsed);
-    println!("Average per frame: {:?}", elapsed / 10);
+    let (bboxes, class_ids, confidences) = model.forward(&img_buffer, 0.25, 0.4).expect("Inference failed");
+    println!("Inference time: {:?}", start.elapsed());
 
-    let (bboxes, class_ids, confidences) = result.unwrap();
-
-    // Print results
-    println!("\nDetections:");
     for (i, bbox) in bboxes.iter().enumerate() {
         println!("Class: {}", classes_labels[class_ids[i]]);
         println!("\tBounding box: x={}, y={}, w={}, h={}", bbox.x, bbox.y, bbox.width, bbox.height);
         println!("\tConfidence: {:.2}", confidences[i]);
     }
-
-    println!("\nTotal detections: {}", bboxes.len());
 }

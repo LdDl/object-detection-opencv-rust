@@ -14,8 +14,8 @@ fn main() {
     let net_width = 640;
     let net_height = 640;
 
-    let mut model = ModelUltralyticsOrt::new_from_file_cuda(
-        "pretrained/yolov8s.onnx",
+    let mut model = ModelUltralyticsOrt::new_from_file(
+        "pretrained/yolo11l.onnx",
         (net_width, net_height),
         vec![],
     ).expect("Failed to load model");
