@@ -26,9 +26,9 @@ use opencv::{
     imgproc::INTER_LINEAR,
 };
 
-use crate::model_format::ModelFormat;
-use crate::model::ModelTrait;
-use crate::utils::{
+use super::model_format::ModelFormat;
+use super::model::ModelTrait;
+use super::utils::{
     BACKEND_TARGET_VALID,
     min_max_loc_partial
 };
@@ -76,8 +76,8 @@ impl ModelUltralyticsV8 {
 	/// | DNN_TARGET_HDDL        |                    |                            + |                    |                   |
     /// 
     /// Basic usage:
-    /// 
-    /// ```
+    ///
+    /// ```ignore
     /// use opencv::dnn::{DNN_BACKEND_OPENCV, DNN_TARGET_CPU};
     /// use opencv::imgcodecs::imread;
     /// use od_opencv::model_format::ModelFormat;

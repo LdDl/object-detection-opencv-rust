@@ -1,10 +1,10 @@
-use crate::model_format::{
+use super::model_format::{
     ModelFormat,
     ModelVersion
 };
-use crate::utils::FORMAT_VERSION_VALID;
-use crate::model_classic::ModelYOLOClassic;
-use crate::model_ultralytics::ModelUltralyticsV8;
+use super::utils::FORMAT_VERSION_VALID;
+use super::model_classic::ModelYOLOClassic;
+use super::model_ultralytics::ModelUltralyticsV8;
 use opencv::{
     core::Mat,
     core::Rect,

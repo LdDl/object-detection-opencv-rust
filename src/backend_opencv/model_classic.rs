@@ -5,9 +5,9 @@ use opencv::{
     prelude::NetTrait, prelude::NetTraitConst, Error,
 };
 
-use crate::model::ModelTrait;
-use crate::model_format::ModelFormat;
-use crate::utils::BACKEND_TARGET_VALID;
+use super::model::ModelTrait;
+use super::model_format::ModelFormat;
+use super::utils::BACKEND_TARGET_VALID;
 
 const YOLO_BLOB_MEAN: (f64, f64, f64, f64) = (0.0, 0.0, 0.0, 0.0);
 

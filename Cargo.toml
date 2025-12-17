@@ -10,7 +10,7 @@ keywords = [
   "yolo-v8",
 ]
 license = "MIT"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -37,17 +37,77 @@ name = "od_opencv"
 path = "src/lib.rs"
 doctest = false
 
+# YOLOv3 examples
+[[example]]
+name = "yolo_v3"
+
 [[example]]
 name = "yolo_v3_tiny"
+
+# YOLOv4 examples
+[[example]]
+name = "yolo_v4"
 
 [[example]]
 name = "yolo_v4_tiny"
 
 [[example]]
+name = "yolo_v4_tiny_onnx"
+
+# YOLOv7 examples
+[[example]]
+name = "yolo_v7"
+
+[[example]]
 name = "yolo_v7_tiny"
+
+# YOLOv8 examples
+[[example]]
+name = "yolo_v8_l"
+
+[[example]]
+name = "yolo_v8_m"
 
 [[example]]
 name = "yolo_v8_n"
+
+[[example]]
+name = "yolo_v8_s"
+
+[[example]]
+name = "yolo_v8_x"
+
+# YOLOv9 examples
+[[example]]
+name = "yolo_v9_c"
+
+[[example]]
+name = "yolo_v9_e"
+
+[[example]]
+name = "yolo_v9_m"
+
+[[example]]
+name = "yolo_v9_s"
+
+[[example]]
+name = "yolo_v9_t"
+
+# YOLOv11 examples
+[[example]]
+name = "yolo_v11_l"
+
+[[example]]
+name = "yolo_v11_m"
+
+[[example]]
+name = "yolo_v11_n"
+
+[[example]]
+name = "yolo_v11_s"
+
+[[example]]
+name = "yolo_v11_x"
 
 [dependencies]
 lazy_static = "1.5.0"
