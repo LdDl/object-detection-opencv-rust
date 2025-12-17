@@ -29,7 +29,7 @@ categories = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["opencv-backend"]
+default = ["ort-backend"]
 
 # Backend features - user should choose one
 opencv-backend = ["dep:opencv"]
