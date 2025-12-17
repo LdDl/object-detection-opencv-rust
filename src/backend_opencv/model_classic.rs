@@ -347,3 +347,17 @@ impl ModelTrait for ModelYOLOClassic {
         self.forward(image, conf_threshold, nms_threshold)
     }
 }
+
+impl crate::ObjectDetector for ModelYOLOClassic {
+    type Input = Mat;
+    type Error = Error;
+
+    fn detect(
+        &mut self,
+        input: &Self::Input,
+        conf_threshold: f32,
+        nms_threshold: f32,
+    ) -> Result<(Vec<BBox>, Vec<usize>, Vec<f32>), Self::Error> {
+        self.forward_bbox(input, conf_threshold, nms_threshold)
+    }
+}
