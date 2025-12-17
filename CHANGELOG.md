@@ -2,6 +2,17 @@
 
 All notable changes to this set of object detection utils will be documented in this file.
 
+## [0.4.1] - 2025-12-17
+
+### Added
+
+- **`ort-opencv-compat` feature**: Hybrid approach using ORT for inference with OpenCV for I/O
+  - Enables `ModelTrait` accepting `opencv::core::Mat` directly
+  - OpenCV dependency without DNN module (avoids static linking conflicts)
+  - BGR HWC to RGB NCHW conversion via `preprocess_mat()`
+  - New module `opencv_compat.rs` with Mat-to-ndarray utilities
+---
+
 ## [0.4.0] - 2024-12-17
 
 ### Breaking Changes
