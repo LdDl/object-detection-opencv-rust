@@ -5,9 +5,14 @@
 //!
 //! Supports traditional YOLOv3, v4, v7 (Darknet), and YOLOv8, v9, v11 (Ultralytics).
 
-// Common types
+// Common types (always available)
 pub mod bbox;
+pub mod image_buffer;
+pub mod model_trait;
+
 pub use bbox::BBox;
+pub use image_buffer::{ChannelOrder, ImageBuffer};
+pub use model_trait::ObjectDetector;
 
 // Backend module (for opencv-backend feature)
 #[cfg(feature = "opencv-backend")]
