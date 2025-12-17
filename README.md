@@ -270,6 +270,27 @@ let mut model = ModelUltralyticsOrt::new_from_file_cuda(
 ).expect("Failed to load model");
 ```
 
+#### ORT with OpenCV I/O
+
+If you need OpenCV for video capture or image I/O but want ORT for inference, use the `ort-opencv-compat` feature:
+
+```toml
+od_opencv = { version = "0.4", features = ["ort-opencv-compat"] }
+```
+
+This enables `ModelTrait` which accepts `opencv::core::Mat` directly:
+
+```rust
+use od_opencv::{Model, ModelTrait};
+use opencv::imgcodecs;
+
+let mut model = Model::ort("model.onnx", (640, 640))?;
+let img = imgcodecs::imread("image.jpg", imgcodecs::IMREAD_COLOR)?;
+let (bboxes, class_ids, confidences) = ModelTrait::forward(&mut model, &img, 0.25, 0.4)?;
+```
+
+See full example here: [examples/yolo_v8_s_ort_opencv.rs](examples/yolo_v8_s_ort_opencv.rs)
+
 ### OpenCV Backend
 
 The OpenCV backend is required for Darknet models (v3/v4/v7) and provides access to highly optimized OpenCV's things for preprocessing and postprocessing.
