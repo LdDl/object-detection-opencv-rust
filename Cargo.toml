@@ -10,7 +10,7 @@ keywords = [
   "onnx",
 ]
 license = "MIT"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -32,12 +32,17 @@ categories = [
 default = ["ort-backend"]
 
 # Backend features - user should choose one
-opencv-backend = ["dep:opencv"]
+# opencv-backend adds the DNN module which conflicts with ORT static linking
+opencv-backend = ["dep:opencv", "opencv/dnn"]
 ort-backend = ["dep:ort", "dep:image"]
 
 # GPU acceleration for ort-backend
 ort-cuda-backend = ["ort-backend", "ort/cuda"]
 ort-tensorrt-backend = ["ort-backend", "ort/tensorrt"]
+
+# Compatibility layer: allows ORT backend to accept OpenCV Mat
+# Note: This does NOT enable OpenCV's DNN module to avoid conflicts with ORT
+ort-opencv-compat = ["ort-backend", "dep:opencv"]
 
 # Preprocessing options
 letterbox = []
@@ -264,12 +269,17 @@ required-features = ["ort-cuda-backend"]
 name = "yolo_v11_x_ort_cuda"
 required-features = ["ort-cuda-backend"]
 
+# YOLOv8s - ORT + OpenCV compatibility example
+[[example]]
+name = "yolo_v8_s_ort_opencv"
+required-features = ["ort-opencv-compat"]
+
 [dependencies]
 lazy_static = "1.5.0"
 ndarray = "0.16"
 
-# OpenCV backend
-opencv = { version = "0.96.0", default-features = false, features = ["dnn", "imgcodecs", "imgproc"], optional = true }
+# OpenCV backend (dnn feature is added via opencv-backend feature flag to avoid conflicts with ORT)
+opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs", "imgproc"], optional = true }
 
 # ORT (ONNX runtime) backend
 ort = { version = "2.0.0-rc.10", optional = true }

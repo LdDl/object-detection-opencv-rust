@@ -295,6 +295,99 @@ impl crate::ObjectDetector for ModelUltralyticsOrt {
     }
 }
 
+// OpenCV compatibility: implement ModelTrait for Mat input
+#[cfg(feature = "ort-opencv-compat")]
+mod opencv_compat_impl {
+    use super::*;
+    use opencv::core::{Mat, Rect};
+    use opencv::Error as OpenCvError;
+
+    impl ModelUltralyticsOrt {
+        /// Runs inference on an OpenCV Mat image.
+        ///
+        /// This is the optimized path that:
+        /// 1. Uses OpenCV for resize (works with BGR natively)
+        /// 2. Converts BGR→RGB fused with normalization
+        /// 3. Runs ORT inference
+        ///
+        /// # Arguments
+        /// * `image` - Input BGR Mat (from VideoCapture, imread, etc.)
+        /// * `conf_threshold` - Confidence threshold (0.0 - 1.0)
+        /// * `nms_threshold` - NMS IoU threshold (0.0 - 1.0)
+        ///
+        /// # Returns
+        /// Tuple of (bounding boxes as opencv::Rect, class IDs, confidence scores)
+        pub fn forward_mat(
+            &mut self,
+            image: &Mat,
+            conf_threshold: f32,
+            nms_threshold: f32,
+        ) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), OpenCvError> {
+            // Use optimized preprocessing: OpenCV resize + fused BGR→RGB conversion
+            let (tensor, meta) = crate::opencv_compat::preprocess_mat(
+                image,
+                self.input_width,
+                self.input_height,
+                self.use_letterbox,
+            )?;
+
+            // Run inference
+            let outputs = self.session.run(
+                inputs!["images" => TensorRef::from_array_view(&tensor).map_err(|e| {
+                    OpenCvError::new(opencv::core::StsError, format!("ORT error: {}", e))
+                })?]
+            ).map_err(|e| {
+                OpenCvError::new(opencv::core::StsError, format!("ORT inference error: {}", e))
+            })?;
+
+            // Get output tensor
+            let output = outputs["output0"]
+                .try_extract_array::<f32>()
+                .map_err(|e| {
+                    OpenCvError::new(opencv::core::StsError, format!("Output extraction error: {}", e))
+                })?
+                .into_owned();
+
+            // Parse output
+            let detections = Self::parse_output_array_static(&output.view(), conf_threshold, &meta)
+                .map_err(|e| {
+                    OpenCvError::new(opencv::core::StsError, format!("Parse error: {}", e))
+                })?;
+
+            // Apply class filter
+            let class_filters = self.class_filters.clone();
+            let filtered = filter_by_class(&detections, &class_filters);
+
+            // Apply NMS
+            let final_detections = nms(&filtered, nms_threshold);
+
+            // Convert to OpenCV format
+            let (bboxes, class_ids, confidences) = detections_to_vecs(final_detections);
+
+            // Convert BBox to opencv::Rect
+            let rects: Vec<Rect> = bboxes
+                .into_iter()
+                .map(|bbox| Rect::new(bbox.x, bbox.y, bbox.width, bbox.height))
+                .collect();
+
+            Ok((rects, class_ids, confidences))
+        }
+    }
+
+    // Implement ModelTrait for ORT model when ort-opencv-compat is enabled
+    // Uses the ModelTrait from opencv_compat module (does NOT depend on DNN)
+    impl crate::opencv_compat::ModelTrait for ModelUltralyticsOrt {
+        fn forward(
+            &mut self,
+            image: &Mat,
+            conf_threshold: f32,
+            nms_threshold: f32,
+        ) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), OpenCvError> {
+            self.forward_mat(image, conf_threshold, nms_threshold)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

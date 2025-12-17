@@ -96,8 +96,8 @@ impl BBox {
     }
 }
 
-// OpenCV conversions - only available with opencv-backend feature
-#[cfg(feature = "opencv-backend")]
+// OpenCV conversions - available with opencv-backend or ort-opencv-compat feature
+#[cfg(any(feature = "opencv-backend", feature = "ort-opencv-compat"))]
 mod opencv_impl {
     use super::BBox;
     use opencv::core::Rect;
@@ -190,7 +190,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature = "opencv-backend"))]
+#[cfg(all(test, any(feature = "opencv-backend", feature = "ort-opencv-compat")))]
 mod opencv_tests {
     use super::*;
     use opencv::core::Rect;

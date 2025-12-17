@@ -151,7 +151,7 @@ mod image_preprocessing {
         (result, meta)
     }
 
-    /// Converts an ImageBuffer to a normalized float32 tensor in NCHW format.
+    /// Converts an ImageBuffer (RGB) to a normalized float32 tensor in NCHW format.
     pub fn to_nchw_tensor(img: &ImageBuffer) -> Array4<f32> {
         let (height, width, channels) = img.shape();
         let data = img.as_array();
@@ -163,6 +163,36 @@ mod image_preprocessing {
                 for w in 0..width {
                     tensor[[0, c, h, w]] = data[[h, w, c]] as f32 / 255.0;
                 }
+            }
+        }
+
+        tensor
+    }
+
+    /// Converts a BGR HWC u8 array to RGB NCHW f32 tensor in one pass.
+    ///
+    /// This fuses the BGR→RGB conversion with normalization, saving one full
+    /// image copy compared to separate operations.
+    ///
+    /// # Arguments
+    /// * `bgr` - Input array in HWC format with BGR channel order
+    ///
+    /// # Returns
+    /// Normalized f32 tensor in NCHW format with RGB channel order
+    pub fn bgr_hwc_to_rgb_nchw_tensor(bgr: &ndarray::ArrayView3<u8>) -> Array4<f32> {
+        let (height, width, _channels) = bgr.dim();
+
+        let mut tensor = Array4::<f32>::zeros((1, 3, height, width));
+
+        for h in 0..height {
+            for w in 0..width {
+                // BGR → RGB swap happens here, fused with normalization
+                // R from index 2
+                tensor[[0, 0, h, w]] = bgr[[h, w, 2]] as f32 / 255.0;
+                // G from index 1
+                tensor[[0, 1, h, w]] = bgr[[h, w, 1]] as f32 / 255.0;
+                // B from index 0
+                tensor[[0, 2, h, w]] = bgr[[h, w, 0]] as f32 / 255.0;
             }
         }
 
@@ -227,7 +257,8 @@ mod tests {
     #[test]
     fn test_to_nchw_tensor() {
         let mut data = Array3::zeros((2, 3, 3));
-        data[[0, 0, 0]] = 255; // R=255 at (0,0)
+        // R=255 at (0,0)
+        data[[0, 0, 0]] = 255;
 
         let img = ImageBuffer::from_rgb(data);
         let tensor = to_nchw_tensor(&img);
@@ -252,5 +283,46 @@ mod tests {
         assert!((y - 200.0).abs() < 0.01);
         assert!((w - 100.0).abs() < 0.01);
         assert!((h - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_bgr_hwc_to_rgb_nchw_tensor() {
+        // Create a 2x2 BGR image
+        // Pixel (0,0): B=10, G=20, R=30
+        // Pixel (0,1): B=40, G=50, R=60
+        let mut bgr_data = Array3::<u8>::zeros((2, 2, 3));
+        // B
+        bgr_data[[0, 0, 0]] = 10;
+        // G
+        bgr_data[[0, 0, 1]] = 20;
+        // R
+        bgr_data[[0, 0, 2]] = 30;
+        // B
+        bgr_data[[0, 1, 0]] = 40;
+        // G
+        bgr_data[[0, 1, 1]] = 50;
+        // R
+        bgr_data[[0, 1, 2]] = 60;
+
+        let tensor = bgr_hwc_to_rgb_nchw_tensor(&bgr_data.view());
+
+        // Check shape: NCHW = (1, 3, 2, 2)
+        assert_eq!(tensor.shape(), &[1, 3, 2, 2]);
+
+        // Check pixel (0,0): should be R=30/255, G=20/255, B=10/255
+        // R channel
+        assert!((tensor[[0, 0, 0, 0]] - 30.0 / 255.0).abs() < 0.001);
+        // G channel
+        assert!((tensor[[0, 1, 0, 0]] - 20.0 / 255.0).abs() < 0.001);
+        // B channel
+        assert!((tensor[[0, 2, 0, 0]] - 10.0 / 255.0).abs() < 0.001);
+
+        // Check pixel (0,1): should be R=60/255, G=50/255, B=40/255
+        // R channel
+        assert!((tensor[[0, 0, 0, 1]] - 60.0 / 255.0).abs() < 0.001);
+        // G channel
+        assert!((tensor[[0, 1, 0, 1]] - 50.0 / 255.0).abs() < 0.001);
+        // B channel
+        assert!((tensor[[0, 2, 0, 1]] - 40.0 / 255.0).abs() < 0.001);
     }
 }
