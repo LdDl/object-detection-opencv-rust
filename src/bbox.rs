@@ -1,9 +1,8 @@
 //! Bounding box type for object detection results.
 //!
-//! This module provides a bounding box type that can be used for detection results.
+//! This module provides a backend-agnostic bounding box type that can be used
+//! with any inference backend. When the `opencv-backend` feature is enabled,
 //! It provides seamless conversion to/from `opencv::core::Rect`.
-
-use opencv::core::Rect;
 
 /// A bounding box representing a detected object.
 ///
@@ -97,28 +96,34 @@ impl BBox {
     }
 }
 
-// OpenCV conversions
-impl From<BBox> for Rect {
-    fn from(bbox: BBox) -> Self {
-        Rect::new(bbox.x, bbox.y, bbox.width, bbox.height)
-    }
-}
+// OpenCV conversions - only available with opencv-backend feature
+#[cfg(feature = "opencv-backend")]
+mod opencv_impl {
+    use super::BBox;
+    use opencv::core::Rect;
 
-impl From<Rect> for BBox {
-    fn from(rect: Rect) -> Self {
-        BBox::new(rect.x, rect.y, rect.width, rect.height)
+    impl From<BBox> for Rect {
+        fn from(bbox: BBox) -> Self {
+            Rect::new(bbox.x, bbox.y, bbox.width, bbox.height)
+        }
     }
-}
 
-impl From<&Rect> for BBox {
-    fn from(rect: &Rect) -> Self {
-        BBox::new(rect.x, rect.y, rect.width, rect.height)
+    impl From<Rect> for BBox {
+        fn from(rect: Rect) -> Self {
+            BBox::new(rect.x, rect.y, rect.width, rect.height)
+        }
     }
-}
 
-impl From<&BBox> for Rect {
-    fn from(bbox: &BBox) -> Self {
-        Rect::new(bbox.x, bbox.y, bbox.width, bbox.height)
+    impl From<&Rect> for BBox {
+        fn from(rect: &Rect) -> Self {
+            BBox::new(rect.x, rect.y, rect.width, rect.height)
+        }
+    }
+
+    impl From<&BBox> for Rect {
+        fn from(bbox: &BBox) -> Self {
+            Rect::new(bbox.x, bbox.y, bbox.width, bbox.height)
+        }
     }
 }
 
@@ -183,6 +188,12 @@ mod tests {
         assert_eq!(clamped.width, 50);
         assert_eq!(clamped.height, 50);
     }
+}
+
+#[cfg(all(test, feature = "opencv-backend"))]
+mod opencv_tests {
+    use super::*;
+    use opencv::core::Rect;
 
     #[test]
     fn test_bbox_to_rect() {

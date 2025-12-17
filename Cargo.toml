@@ -29,7 +29,8 @@ categories = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = []
+default = ["opencv-backend"]
+opencv-backend = ["dep:opencv"]
 letterbox = []
 
 [lib]
@@ -40,78 +41,100 @@ doctest = false
 # YOLOv3 examples
 [[example]]
 name = "yolo_v3"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v3_tiny"
+required-features = ["opencv-backend"]
 
 # YOLOv4 examples
 [[example]]
 name = "yolo_v4"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v4_tiny"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v4_tiny_onnx"
+required-features = ["opencv-backend"]
 
 # YOLOv7 examples
 [[example]]
 name = "yolo_v7"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v7_tiny"
+required-features = ["opencv-backend"]
 
 # YOLOv8 examples
 [[example]]
 name = "yolo_v8_l"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v8_m"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v8_n"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v8_s"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v8_x"
+required-features = ["opencv-backend"]
 
 # YOLOv9 examples
 [[example]]
 name = "yolo_v9_c"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v9_e"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v9_m"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v9_s"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v9_t"
+required-features = ["opencv-backend"]
 
 # YOLOv11 examples
 [[example]]
 name = "yolo_v11_l"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v11_m"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v11_n"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v11_s"
+required-features = ["opencv-backend"]
 
 [[example]]
 name = "yolo_v11_x"
+required-features = ["opencv-backend"]
 
 [dependencies]
 lazy_static = "1.5.0"
-opencv = { version = "0.96.0", default-features = false, features = ["dnn", "imgcodecs", "imgproc"] }
+opencv = { version = "0.96.0", default-features = false, features = ["dnn", "imgcodecs", "imgproc"], optional = true }
 
 [patch.crates-io]
 cc = { git = "https://github.com/rust-lang/cc-rs.git", version = "1.0", tag = "1.0.79" }
