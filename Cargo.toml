@@ -10,7 +10,7 @@ keywords = [
   "yolo-v8",
 ]
 license = "MIT"
-version = "0.3.4"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -29,8 +29,17 @@ categories = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["opencv-backend"]
+default = ["ort-backend"]
+
+# Backend features - user should choose one
 opencv-backend = ["dep:opencv"]
+ort-backend = ["dep:ort", "dep:image"]
+
+# GPU acceleration for ort-backend
+ort-cuda-backend = ["ort-backend", "ort/cuda"]
+ort-tensorrt-backend = ["ort-backend", "ort/tensorrt"]
+
+# Preprocessing options
 letterbox = []
 
 [lib]
@@ -132,10 +141,139 @@ required-features = ["opencv-backend"]
 name = "yolo_v11_x"
 required-features = ["opencv-backend"]
 
+# YOLOv8 examples (ort-backend)
+[[example]]
+name = "yolo_v8_n_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v8_s_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v8_m_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v8_l_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v8_x_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v8_n_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_m_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_l_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_x_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+# YOLOv9 examples (ort-backend)
+[[example]]
+name = "yolo_v9_t_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v9_s_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v9_m_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v9_c_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v9_e_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v9_t_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_m_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_c_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_e_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+# YOLOv11 examples (ort-backend)
+[[example]]
+name = "yolo_v11_n_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v11_s_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v11_m_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v11_l_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v11_x_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v11_n_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_m_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_l_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_x_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
 [dependencies]
 lazy_static = "1.5.0"
-ndarray = "0.17.1"
+ndarray = "0.16"
+
+# OpenCV backend
 opencv = { version = "0.96.0", default-features = false, features = ["dnn", "imgcodecs", "imgproc"], optional = true }
+
+# ORT (ONNX runtime) backend
+ort = { version = "2.0.0-rc.10", optional = true }
+image = { version = "0.25", optional = true }
 
 [patch.crates-io]
 cc = { git = "https://github.com/rust-lang/cc-rs.git", version = "1.0", tag = "1.0.79" }
