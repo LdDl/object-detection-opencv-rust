@@ -163,7 +163,23 @@ name = "yolo_v8_x_ort"
 required-features = ["ort-backend"]
 
 [[example]]
+name = "yolo_v8_n_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
 name = "yolo_v8_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_m_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_l_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v8_x_ort_cuda"
 required-features = ["ort-cuda-backend"]
 
 # YOLOv9 examples (ort-backend)
@@ -187,6 +203,26 @@ required-features = ["ort-backend"]
 name = "yolo_v9_e_ort"
 required-features = ["ort-backend"]
 
+[[example]]
+name = "yolo_v9_t_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_m_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_c_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v9_e_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
 # YOLOv11 examples (ort-backend)
 [[example]]
 name = "yolo_v11_n_ort"
@@ -207,6 +243,26 @@ required-features = ["ort-backend"]
 [[example]]
 name = "yolo_v11_x_ort"
 required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v11_n_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_s_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_m_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_l_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v11_x_ort_cuda"
+required-features = ["ort-cuda-backend"]
 
 [dependencies]
 lazy_static = "1.5.0"
