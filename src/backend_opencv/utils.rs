@@ -14,7 +14,7 @@ use opencv::{
 };
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
-use crate::model_format::{
+use super::model_format::{
     ModelFormat,
     ModelVersion
 };
