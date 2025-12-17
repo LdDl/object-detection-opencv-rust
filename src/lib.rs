@@ -16,10 +16,12 @@
 pub mod bbox;
 pub mod image_buffer;
 pub mod model_trait;
+pub mod model_factory;
 
 pub use bbox::BBox;
 pub use image_buffer::{ChannelOrder, ImageBuffer};
 pub use model_trait::ObjectDetector;
+pub use model_factory::Model;
 
 // Pure Rust preprocessing/postprocessing (for ort-backend)
 #[cfg(feature = "ort-backend")]

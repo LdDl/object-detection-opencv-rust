@@ -1,9 +1,6 @@
 use std::time::Instant;
 
-use od_opencv::{
-    ImageBuffer,
-    backend_ort::ModelUltralyticsOrt,
-};
+use od_opencv::{ImageBuffer, Model};
 
 fn main() {
     // Initialize ort runtime
@@ -14,10 +11,9 @@ fn main() {
     let net_width = 640;
     let net_height = 640;
 
-    let mut model = ModelUltralyticsOrt::new_from_file(
+    let mut model = Model::ort(
         "pretrained/yolov8x.onnx",
         (net_width, net_height),
-        vec![],
     ).expect("Failed to load model");
 
     let img = image::open("images/dog.jpg").expect("Failed to load image");
