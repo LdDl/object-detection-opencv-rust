@@ -17,6 +17,8 @@ use opencv::{
     Error
 };
 
+use crate::BBox;
+
 #[cfg(feature = "letterbox")]
 use opencv::{
     core::CV_8UC3,
@@ -300,6 +302,16 @@ impl ModelUltralyticsV8 {
             .filter_map(|(idx, item)| if indices_vec.contains(&(idx as i32)) {Some(item)} else {None}));
 
         Ok((nms_bboxes, nms_classes_ids, nms_confidences))
+    }
+
+    /// Runs forward pass and returns results with `BBox` instead of `opencv::core::Rect`.
+    ///
+    /// This is a convenience method for users who prefer the backend-agnostic `BBox` type.
+    /// Internally calls `forward()` and converts the results.
+    pub fn forward_bbox(&mut self, image: &Mat, conf_threshold: f32, nms_threshold: f32) -> Result<(Vec<BBox>, Vec<usize>, Vec<f32>), Error> {
+        let (rects, class_ids, confidences) = self.forward(image, conf_threshold, nms_threshold)?;
+        let bboxes = rects.into_iter().map(|r| r.into()).collect();
+        Ok((bboxes, class_ids, confidences))
     }
 }
 

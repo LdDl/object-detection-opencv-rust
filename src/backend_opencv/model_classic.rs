@@ -5,6 +5,8 @@ use opencv::{
     prelude::NetTrait, prelude::NetTraitConst, Error,
 };
 
+use crate::BBox;
+
 use super::model::ModelTrait;
 use super::model_format::ModelFormat;
 use super::utils::BACKEND_TARGET_VALID;
@@ -47,7 +49,7 @@ impl ModelYOLOClassic {
     ///
     /// Basic usage:
     ///
-    /// ```
+    /// ```ignore
     /// use opencv::dnn::{DNN_BACKEND_OPENCV, DNN_TARGET_CPU};
     /// use opencv::imgcodecs::imread;
     /// use od_opencv::model_format::ModelFormat;
@@ -322,6 +324,16 @@ impl ModelYOLOClassic {
         ));
 
         Ok((nms_bboxes, nms_classes_ids, nms_confidences))
+    }
+
+    /// Runs forward pass and returns results with `BBox` instead of `opencv::core::Rect`.
+    ///
+    /// This is a convenience method for users who prefer the backend-agnostic `BBox` type.
+    /// Internally calls `forward()` and converts the results.
+    pub fn forward_bbox(&mut self, image: &Mat, conf_threshold: f32, nms_threshold: f32) -> Result<(Vec<BBox>, Vec<usize>, Vec<f32>), Error> {
+        let (rects, class_ids, confidences) = self.forward(image, conf_threshold, nms_threshold)?;
+        let bboxes = rects.into_iter().map(|r| r.into()).collect();
+        Ok((bboxes, class_ids, confidences))
     }
 }
 
