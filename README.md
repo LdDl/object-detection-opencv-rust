@@ -1,4 +1,6 @@
-[![Package](https://img.shields.io/crates/v/od_opencv.svg)](https://crates.io/crates/od_opencv)
+[![Crates.io](https://img.shields.io/crates/v/od_opencv.svg)](https://crates.io/crates/od_opencv)
+[![Downloads](https://img.shields.io/crates/d/od_opencv.svg)](https://crates.io/crates/od_opencv)
+[![Documentation](https://docs.rs/od_opencv/badge.svg)](https://docs.rs/od_opencv)
 
 # Object detection utilities in Rust for YOLO-based neural networks
 
