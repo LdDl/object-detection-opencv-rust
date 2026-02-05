@@ -2,6 +2,16 @@
 
 All notable changes to this set of object detection utils will be documented in this file.
 
+## [0.5.0] - 2026-02-05
+### Added
+- YOLOv5
+- YOLOv5u - "u" is for "updated". Ultralytics updated models with YOLOv8-style output, so it now easier to work with.
+are supported now
+## Modified
+- Updated README.md with YOLOv5 support information
+- Updated examples to include YOLOv5 usage
+- Move download scripts to `scripts/` directory
+
 ## [0.4.1] - 2025-12-17
 
 ### Added
