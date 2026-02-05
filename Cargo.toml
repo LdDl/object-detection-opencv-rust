@@ -14,7 +14,7 @@ version = "0.4.1"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
-exclude = ["/.github", "/ci", "/tools", "release.toml", "rustfmt.toml", "download_v3_tiny.sh", "download_v4_tiny.sh", "download_v7_tiny.sh", "download_v8_n.sh", "/images", "/pretrained"]
+exclude = ["/.github", "/ci", "/tools", "/scripts", "release.toml", "rustfmt.toml", "/images", "/pretrained"]
 description = "Object detection utilities in Rust programming language for YOLO-based neural networks in OpenCV ecosystem"
 homepage = "https://github.com/LdDl/object-detection-opencv-rust"
 documentation = "https://docs.rs/od_opencv"
@@ -273,6 +273,26 @@ required-features = ["ort-cuda-backend"]
 [[example]]
 name = "yolo_v8_s_ort_opencv"
 required-features = ["ort-opencv-compat"]
+
+# YOLOv5u examples (ort-backend) - Ultralytics updated format (same as YOLOv8)
+[[example]]
+name = "yolo_v5u_n_ort"
+required-features = ["ort-backend"]
+
+# YOLOv5u examples (opencv-backend) - Ultralytics updated format (same as YOLOv8)
+[[example]]
+name = "yolo_v5u_n"
+required-features = ["opencv-backend"]
+
+# YOLOv5 examples (ort-backend) - Original format with objectness score
+[[example]]
+name = "yolo_v5_n_ort"
+required-features = ["ort-backend"]
+
+# YOLOv5 examples (opencv-backend)
+[[example]]
+name = "yolo_v5_n"
+required-features = ["opencv-backend"]
 
 [dependencies]
 lazy_static = "1.5.0"
