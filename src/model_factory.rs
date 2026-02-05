@@ -64,6 +64,37 @@ impl Model {
     ) -> Result<crate::backend_ort::ModelUltralyticsOrt, crate::backend_ort::OrtModelError> {
         crate::backend_ort::ModelUltralyticsOrt::new_from_file(model_path, input_size, class_filters)
     }
+
+    /// Creates a new YOLOv5 model using ONNX Runtime (CPU).
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::yolov5_ort("yolov5s.onnx", (640, 640))?;
+    /// ```
+    pub fn yolov5_ort(
+        model_path: &str,
+        input_size: (u32, u32),
+    ) -> Result<crate::backend_ort::ModelYOLOv5Ort, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYOLOv5Ort::new_from_file(model_path, input_size, vec![])
+    }
+
+    /// Creates a new YOLOv5 model with class filtering using ONNX Runtime (CPU).
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `class_filters` - List of class indices to detect (empty for all classes)
+    pub fn yolov5_ort_filtered(
+        model_path: &str,
+        input_size: (u32, u32),
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_ort::ModelYOLOv5Ort, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYOLOv5Ort::new_from_file(model_path, input_size, class_filters)
+    }
 }
 
 #[cfg(feature = "ort-cuda-backend")]
@@ -93,6 +124,32 @@ impl Model {
     ) -> Result<crate::backend_ort::ModelUltralyticsOrt, crate::backend_ort::OrtModelError> {
         crate::backend_ort::ModelUltralyticsOrt::new_from_file_cuda(model_path, input_size, class_filters)
     }
+
+    /// Creates a new YOLOv5 model using ONNX Runtime with CUDA acceleration.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::yolov5_ort_cuda("yolov5s.onnx", (640, 640))?;
+    /// ```
+    pub fn yolov5_ort_cuda(
+        model_path: &str,
+        input_size: (u32, u32),
+    ) -> Result<crate::backend_ort::ModelYOLOv5Ort, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYOLOv5Ort::new_from_file_cuda(model_path, input_size, vec![])
+    }
+
+    /// Creates a new YOLOv5 model with class filtering using ONNX Runtime with CUDA.
+    pub fn yolov5_ort_cuda_filtered(
+        model_path: &str,
+        input_size: (u32, u32),
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_ort::ModelYOLOv5Ort, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYOLOv5Ort::new_from_file_cuda(model_path, input_size, class_filters)
+    }
 }
 
 #[cfg(feature = "ort-tensorrt-backend")]
@@ -121,6 +178,32 @@ impl Model {
         class_filters: Vec<usize>,
     ) -> Result<crate::backend_ort::ModelUltralyticsOrt, crate::backend_ort::OrtModelError> {
         crate::backend_ort::ModelUltralyticsOrt::new_from_file_tensorrt(model_path, input_size, class_filters)
+    }
+
+    /// Creates a new YOLOv5 model using ONNX Runtime with TensorRT acceleration.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::yolov5_ort_tensorrt("yolov5s.onnx", (640, 640))?;
+    /// ```
+    pub fn yolov5_ort_tensorrt(
+        model_path: &str,
+        input_size: (u32, u32),
+    ) -> Result<crate::backend_ort::ModelYOLOv5Ort, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYOLOv5Ort::new_from_file_tensorrt(model_path, input_size, vec![])
+    }
+
+    /// Creates a new YOLOv5 model with class filtering using TensorRT.
+    pub fn yolov5_ort_tensorrt_filtered(
+        model_path: &str,
+        input_size: (u32, u32),
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_ort::ModelYOLOv5Ort, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYOLOv5Ort::new_from_file_tensorrt(model_path, input_size, class_filters)
     }
 }
 
@@ -302,6 +385,59 @@ impl Model {
         class_filters: Vec<usize>,
     ) -> Result<crate::backend_opencv::model_classic::ModelYOLOClassic, opencv::Error> {
         crate::backend_opencv::model_classic::ModelYOLOClassic::new_from_onnx_file(
+            model_path,
+            input_size,
+            backend.into(),
+            target.into(),
+            class_filters,
+        )
+    }
+
+    /// Creates a new YOLOv5 model using OpenCV DNN.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend (e.g., `DnnBackend::Cuda`, `DnnBackend::OpenCV`)
+    /// * `target` - DNN target device (e.g., `DnnTarget::Cuda`, `DnnTarget::Cpu`)
+    ///
+    /// # Example
+    /// ```ignore
+    /// use od_opencv::{Model, DnnBackend, DnnTarget};
+    ///
+    /// let mut model = Model::yolov5_opencv("yolov5s.onnx", (640, 640), DnnBackend::Cuda, DnnTarget::Cuda)?;
+    /// ```
+    pub fn yolov5_opencv(
+        model_path: &str,
+        input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
+    ) -> Result<crate::backend_opencv::model_yolov5::ModelYOLOv5OpenCV, opencv::Error> {
+        crate::backend_opencv::model_yolov5::ModelYOLOv5OpenCV::new_from_onnx_file(
+            model_path,
+            input_size,
+            backend.into(),
+            target.into(),
+            vec![],
+        )
+    }
+
+    /// Creates a new YOLOv5 model with class filtering using OpenCV DNN.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend
+    /// * `target` - DNN target device
+    /// * `class_filters` - List of class indices to detect (empty for all)
+    pub fn yolov5_opencv_filtered(
+        model_path: &str,
+        input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_opencv::model_yolov5::ModelYOLOv5OpenCV, opencv::Error> {
+        crate::backend_opencv::model_yolov5::ModelYOLOv5OpenCV::new_from_onnx_file(
             model_path,
             input_size,
             backend.into(),

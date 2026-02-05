@@ -10,6 +10,7 @@
 //! ## Supported Models
 //!
 //! - Traditional YOLO (v3, v4, v7) - Darknet format, opencv-backend only
+//! - YOLOv5 - ONNX format, both backends
 //! - Ultralytics YOLO (v8, v9, v11) - ONNX format, both backends
 
 // Common types (always available)
@@ -60,6 +61,9 @@ pub use backend_opencv::model_classic;
 #[cfg(feature = "opencv-backend")]
 pub use backend_opencv::model_ultralytics;
 
+#[cfg(feature = "opencv-backend")]
+pub use backend_opencv::model_yolov5;
+
 // model module is needed for ModelTrait (opencv-backend only - depends on dnn)
 #[cfg(feature = "opencv-backend")]
 pub use backend_opencv::model;
@@ -67,6 +71,9 @@ pub use backend_opencv::model;
 // Re-exports for ort-backend
 #[cfg(feature = "ort-backend")]
 pub use backend_ort::ModelUltralyticsOrt;
+
+#[cfg(feature = "ort-backend")]
+pub use backend_ort::ModelYOLOv5Ort;
 
 #[cfg(feature = "ort-backend")]
 pub use backend_ort::OrtModelError;

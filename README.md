@@ -17,6 +17,8 @@ This crate provides structures and methods for solving object detection tasks us
 | YOLO v3       | :x:        | :warning: (need to test) | :white_check_mark: |
 | YOLO v4       | :x:        | :warning: (need to test) | :white_check_mark: |
 | YOLO v7       | :x:        | :warning: (need to test) | :white_check_mark: |
+| YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: |
+| YOLO v5 n/s/m/l/x  | :white_check_mark: (uses `Model::yolov5_ort()`) | :white_check_mark: (uses `Model::yolov5_opencv()`) | :x: |
 | YOLO v8 n     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
 | YOLO v8 s     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
 | YOLO v8 m     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
@@ -65,9 +67,16 @@ Well, there are several circumstances when you may need this crate:
 
 * You want a simple Rust-native solution without heavy dependencies? Use `ort-backend` feature;
 
-_- Why no YOLOv5?_
+_- What about YOLOv5?_
 
-I think there is a difference in postprocessing stuff between v8 and v5 versions. I need more time to investigate what should be done exactly to make v5 work.
+YOLOv5 is supported (05.02.2026 update)! There are two variants:
+
+1. **YOLOv5u** (yolov5nu, yolov5su, etc.) - Ultralytics updated models with YOLOv8-style output (`[1, 84, 8400]`). Use `Model::ort()` or `Model::opencv()` - same as YOLOv8.
+2. **Original YOLOv5** (yolov5n, yolov5s, etc.) - Classic format with objectness score (`[1, 25200, 85]`). Use `Model::yolov5_ort()` or `Model::yolov5_opencv()`.
+
+Download scripts:
+- YOLOv5u: `scripts/download_v5u_n.sh`, `scripts/download_v5u_s.sh`, etc.
+- Original: `scripts/download_v5_n.sh`, `scripts/download_v5_s.sh`, etc.
 
 _- Why YOLOv10 doesn't work with OpenCV?_
 
@@ -91,7 +100,7 @@ This crate supports two inference backends:
 
 | Backend | Default | OpenCV Required | GPU Support | Models Supported |
 |---------|---------|-----------------|-------------|------------------|
-| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv8/v9/v11 (ONNX) |
+| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX) |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions |
 
 **Warning: CUDA Conflict**
@@ -136,27 +145,29 @@ Tested with OpenCV v4.11.0 - v4.12.0. Rust bindings version: v0.96.0
 
 ### Getting Models
 
-* Prepare neural network: train it or get pretrained one. I provide pretty simple Bash scripts to download some versions of YOLO
-    * Traditional: YOLO v3 tiny - [download_v3_tiny.sh](download_v3_tiny.sh); YOLO v3 - [download_v3.sh](download_v3.sh);
-    * Traditional: YOLO v4 tiny - [download_v4_tiny.sh](download_v4_tiny.sh); YOLO v4 - [download_v4.sh](download_v4.sh);
-    * Traditional: YOLO v7 tiny - [download_v7_tiny.sh](download_v7_tiny.sh); YOLO v7 - [download_v7.sh](download_v7.sh);
-    * YOLO v8 nano (n) - [download_v8_n.sh](download_v8_n.sh).
-    * YOLO v8 small (s) - [download_v8_s.sh](download_v8_s.sh).
-    * YOLO v8 medium (m) - [download_v8_m.sh](download_v8_m.sh).
-    * YOLO v8 large (l) - [download_v8_l.sh](download_v8_l.sh).
-    * YOLO v8 extra (x) - [download_v8_x.sh](download_v8_x.sh).
-    * YOLO v9 tiny (t) - [download_v9_t.sh](download_v9_t.sh).
-    * YOLO v9 small (s) - [download_v9_s.sh](download_v9_s.sh).
-    * YOLO v9 medium (m) - [download_v9_m.sh](download_v9_m.sh).
-    * YOLO v9 compact (c) - [download_v9_c.sh](download_v9_c.sh).
-    * YOLO v9 extended (e) - [download_v9_e.sh](download_v9_e.sh).
-    * YOLO v11 nano (n) - [download_v11_n.sh](download_v11_n.sh).
-    * YOLO v11 small (s) - [download_v11_s.sh](download_v11_s.sh).
-    * YOLO v11 medium (m) - [download_v11_m.sh](download_v11_m.sh).
-    * YOLO v11 large (l) - [download_v11_l.sh](download_v11_l.sh).
-    * YOLO v11 extra (x) - [download_v11_x.sh](download_v11_x.sh).
+* Prepare neural network: train it or get pretrained one. I provide pretty simple Bash scripts to download some versions of YOLO (located in [scripts/](scripts/) folder):
+    * Traditional: YOLO v3 tiny - [download_v3_tiny.sh](scripts/download_v3_tiny.sh); YOLO v3 - [download_v3.sh](scripts/download_v3.sh);
+    * Traditional: YOLO v4 tiny - [download_v4_tiny.sh](scripts/download_v4_tiny.sh); YOLO v4 - [download_v4.sh](scripts/download_v4.sh);
+    * Traditional: YOLO v7 tiny - [download_v7_tiny.sh](scripts/download_v7_tiny.sh); YOLO v7 - [download_v7.sh](scripts/download_v7.sh);
+    * YOLO v5u (Ultralytics updated, YOLOv8 format): [download_v5u_n.sh](scripts/download_v5u_n.sh), [download_v5u_s.sh](scripts/download_v5u_s.sh), [download_v5u_m.sh](scripts/download_v5u_m.sh), [download_v5u_l.sh](scripts/download_v5u_l.sh), [download_v5u_x.sh](scripts/download_v5u_x.sh).
+    * YOLO v5 (original format with objectness): [download_v5_n.sh](scripts/download_v5_n.sh), [download_v5_s.sh](scripts/download_v5_s.sh), [download_v5_m.sh](scripts/download_v5_m.sh), [download_v5_l.sh](scripts/download_v5_l.sh), [download_v5_x.sh](scripts/download_v5_x.sh).
+    * YOLO v8 nano (n) - [download_v8_n.sh](scripts/download_v8_n.sh).
+    * YOLO v8 small (s) - [download_v8_s.sh](scripts/download_v8_s.sh).
+    * YOLO v8 medium (m) - [download_v8_m.sh](scripts/download_v8_m.sh).
+    * YOLO v8 large (l) - [download_v8_l.sh](scripts/download_v8_l.sh).
+    * YOLO v8 extra (x) - [download_v8_x.sh](scripts/download_v8_x.sh).
+    * YOLO v9 tiny (t) - [download_v9_t.sh](scripts/download_v9_t.sh).
+    * YOLO v9 small (s) - [download_v9_s.sh](scripts/download_v9_s.sh).
+    * YOLO v9 medium (m) - [download_v9_m.sh](scripts/download_v9_m.sh).
+    * YOLO v9 compact (c) - [download_v9_c.sh](scripts/download_v9_c.sh).
+    * YOLO v9 extended (e) - [download_v9_e.sh](scripts/download_v9_e.sh).
+    * YOLO v11 nano (n) - [download_v11_n.sh](scripts/download_v11_n.sh).
+    * YOLO v11 small (s) - [download_v11_s.sh](scripts/download_v11_s.sh).
+    * YOLO v11 medium (m) - [download_v11_m.sh](scripts/download_v11_m.sh).
+    * YOLO v11 large (l) - [download_v11_l.sh](scripts/download_v11_l.sh).
+    * YOLO v11 extra (x) - [download_v11_x.sh](scripts/download_v11_x.sh).
 
-    __Notice that "v8/v9/v11" scripts download Pytorch-based weights and convert them into ONNX via `ultralytics` package for Python.__
+    __Notice that "v5/v5u/v8/v9/v11" scripts download Pytorch-based weights and convert them into ONNX via `ultralytics` package for Python.__
     
 ## Usage
 
