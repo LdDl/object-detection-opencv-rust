@@ -111,6 +111,15 @@ impl ImageBuffer {
         self.data
     }
 
+    /// Returns the raw pixel data as a contiguous byte slice.
+    ///
+    /// Returns `None` if the underlying array is not contiguous in memory
+    /// (standard C layout).
+    #[inline]
+    pub fn as_slice(&self) -> Option<&[u8]> {
+        self.data.as_slice()
+    }
+
     /// Converts BGR array to RGB by swapping channels.
     fn bgr_to_rgb(mut data: Array3<u8>) -> Array3<u8> {
         // Swap B and R channels (indices 0 and 2)
@@ -149,8 +158,8 @@ impl ImageBuffer {
     }
 }
 
-// image crate conversions - available with ort-backend feature
-#[cfg(feature = "ort-backend")]
+// image crate conversions - available with ort-backend or rknn-backend
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
 mod image_impl {
     use super::*;
     use image::{DynamicImage, RgbImage};

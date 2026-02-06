@@ -79,7 +79,7 @@ impl PreprocessMeta {
 }
 
 // Pure Rust preprocessing using the `image` crate
-#[cfg(feature = "ort-backend")]
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
 mod image_preprocessing {
     use super::*;
     use image::{imageops::FilterType, Rgb, RgbImage};
@@ -219,11 +219,11 @@ mod image_preprocessing {
     }
 }
 
-#[cfg(feature = "ort-backend")]
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
 pub use image_preprocessing::*;
 
 #[cfg(test)]
-#[cfg(feature = "ort-backend")]
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
 mod tests {
     use super::*;
     use ndarray::Array3;
