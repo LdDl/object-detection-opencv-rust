@@ -2,6 +2,18 @@
 
 All notable changes to this set of object detection utils will be documented in this file.
 
+## [0.6.0] - 2026-02-07
+### Added
+- **RKNN NPU backend** (`rknn-backend` feature): Rockchip NPU inference via [rknn-runtime](https://github.com/LdDl/rknn-runtime) crate
+  - `ModelUltralyticsRknn` for YOLOv8 models in `.rknn` format
+  - Factory methods: `Model::rknn()`, `Model::rknn_filtered()`
+  - Input size auto-detected from the model (no manual `input_size` parameter)
+  - Custom `new_with_lib()` for non-default `librknnmrt.so` paths
+  - Optimized for embedded ARM (RV1106): precomputed NC1HWC2 offsets, i8-space threshold, zero-alloc nearest-neighbor resize, lazy dequantization
+  - Tested on LuckFox Pico Ultra W with COCO 320x320
+
+---
+
 ## [0.5.0] - 2026-02-05
 ### Added
 - YOLOv5
