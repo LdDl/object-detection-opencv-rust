@@ -24,11 +24,11 @@ pub use image_buffer::{ChannelOrder, ImageBuffer};
 pub use model_trait::ObjectDetector;
 pub use model_factory::Model;
 
-// Pure Rust preprocessing/postprocessing (for ort-backend)
-#[cfg(feature = "ort-backend")]
+// Pure Rust preprocessing/postprocessing (for ort-backend and rknn-backend)
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
 pub mod preprocessing;
 
-#[cfg(feature = "ort-backend")]
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
 pub mod postprocess;
 
 // OpenCV DNN backend - requires opencv/dnn feature
@@ -38,6 +38,10 @@ pub mod backend_opencv;
 // ONNX Runtime backend
 #[cfg(feature = "ort-backend")]
 pub mod backend_ort;
+
+// RKNN NPU backend
+#[cfg(feature = "rknn-backend")]
+pub mod backend_rknn;
 
 // DNN backend/target enums for opencv-backend
 #[cfg(feature = "opencv-backend")]
@@ -77,6 +81,13 @@ pub use backend_ort::ModelYOLOv5Ort;
 
 #[cfg(feature = "ort-backend")]
 pub use backend_ort::OrtModelError;
+
+// Re-exports for rknn-backend
+#[cfg(feature = "rknn-backend")]
+pub use backend_rknn::ModelUltralyticsRknn;
+
+#[cfg(feature = "rknn-backend")]
+pub use backend_rknn::RknnModelError;
 
 // OpenCV compatibility layer for ORT backend
 // Allows using ORT inference with OpenCV Mat input

@@ -446,3 +446,53 @@ impl Model {
         )
     }
 }
+
+// ============================================================================
+// RKNN Backend
+// ============================================================================
+
+#[cfg(feature = "rknn-backend")]
+impl Model {
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11) using RKNN NPU.
+    ///
+    /// Input size is read from the model automatically.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the `.rknn` model file
+    /// * `num_classes` - Number of detection classes in the model
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::rknn("yolov8n.rknn", 4)?;
+    /// ```
+    pub fn rknn(
+        model_path: &str,
+        num_classes: usize,
+    ) -> Result<crate::backend_rknn::ModelUltralyticsRknn, crate::backend_rknn::RknnModelError> {
+        crate::backend_rknn::ModelUltralyticsRknn::new_from_file(
+            model_path,
+            num_classes,
+            vec![],
+        )
+    }
+
+    /// Creates a new Ultralytics YOLO model with class filtering using RKNN NPU.
+    ///
+    /// Input size is read from the model automatically.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the `.rknn` model file
+    /// * `num_classes` - Number of detection classes in the model
+    /// * `class_filters` - List of class indices to detect (empty for all classes)
+    pub fn rknn_filtered(
+        model_path: &str,
+        num_classes: usize,
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_rknn::ModelUltralyticsRknn, crate::backend_rknn::RknnModelError> {
+        crate::backend_rknn::ModelUltralyticsRknn::new_from_file(
+            model_path,
+            num_classes,
+            class_filters,
+        )
+    }
+}

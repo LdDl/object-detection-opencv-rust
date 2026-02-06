@@ -10,7 +10,7 @@ keywords = [
   "onnx",
 ]
 license = "MIT"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -43,6 +43,9 @@ ort-tensorrt-backend = ["ort-backend", "ort/tensorrt"]
 # Compatibility layer: allows ORT backend to accept OpenCV Mat
 # Note: This does NOT enable OpenCV's DNN module to avoid conflicts with ORT
 ort-opencv-compat = ["ort-backend", "dep:opencv"]
+
+# RKNN NPU backend (Rockchip RV1106 has been tested only)
+rknn-backend = ["dep:rknn-runtime", "dep:image"]
 
 # Preprocessing options
 letterbox = []
@@ -274,6 +277,11 @@ required-features = ["ort-cuda-backend"]
 name = "yolo_v8_s_ort_opencv"
 required-features = ["ort-opencv-compat"]
 
+# YOLOv8 examples (rknn-backend)
+[[example]]
+name = "yolo_v8_n_rknn"
+required-features = ["rknn-backend"]
+
 # YOLOv5u examples (ort-backend) - Ultralytics updated format (same as YOLOv8)
 [[example]]
 name = "yolo_v5u_n_ort"
@@ -304,6 +312,9 @@ opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs"
 # ORT (ONNX runtime) backend
 ort = { version = "2.0.0-rc.10", optional = true }
 image = { version = "0.25", optional = true }
+
+# RKNN NPU backend
+rknn-runtime = { version = "0.1.1", optional = true }
 
 [patch.crates-io]
 cc = { git = "https://github.com/rust-lang/cc-rs.git", version = "1.0", tag = "1.0.79" }

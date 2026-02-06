@@ -8,6 +8,7 @@ This crate provides structures and methods for solving object detection tasks us
 
 - **ORT backend** (default): Pure Rust, no OpenCV required, uses ONNX Runtime
 - **OpenCV backend**: Uses [OpenCV's DNN module](https://docs.opencv.org/4.8.0/d2/d58/tutorial_table_of_content_dnn.html), supports Darknet format
+- **RKNN backend**: Rockchip NPU inference for edge devices (RV1106 tested only on LuckFox Pico Ultra W)
 
 | Network type  | ORT (ONNX) | OpenCV (ONNX) | OpenCV (Darknet) |
 | ------------- | ---------- | ------------- | ---------------- |
@@ -47,6 +48,7 @@ This crate provides structures and methods for solving object detection tasks us
 - [Usage](#usage)
   - [ORT Backend (Default)](#ort-backend-default)
   - [OpenCV Backend](#opencv-backend)
+  - [RKNN Backend](#rknn-backend)
 - [Features](#features)
 - [Migration from 0.3.x](#migration-from-03x)
 - [References](#references)
@@ -102,6 +104,7 @@ This crate supports two inference backends:
 |---------|---------|-----------------|-------------|------------------|
 | `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX) |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions |
+| `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11 (.rknn) |
 
 **Warning: CUDA Conflict**
 
@@ -123,6 +126,9 @@ od_opencv = { version = "0.4", features = ["ort-tensorrt-backend"] }
 
 # Use OpenCV backend (required for Darknet models)
 od_opencv = { version = "0.4", default-features = false, features = ["opencv-backend"] }
+
+# Use RKNN backend (Rockchip NPU devices)
+od_opencv = { version = "0.6", default-features = false, features = ["rknn-backend"] }
 ```
 
 ## Prerequisites
@@ -440,6 +446,74 @@ The OpenCV backend is required for Darknet models (v3/v4/v7) and provides access
 
 8. If anything is going wrong, feel free to [open an issue](https://github.com/LdDl/object-detection-opencv-rust/issues/new)
 
+### RKNN Backend
+
+The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https://github.com/LdDl/rknn-runtime) crate. Tested on LuckFox Pico Ultra W (RV1106) with a COCO 320x320 model. For that specific size I've converted ONNX model to `.rknn` (with some preparations also) format via recommendations here: [rv1106-yolov8](https://github.com/LdDl/rv1106-yolov8).
+
+1. Add to `Cargo.toml`:
+    ```toml
+    [dependencies]
+    od_opencv = { version = "0.6", default-features = false, features = ["rknn-backend"] }
+    image = "0.25"
+    ```
+
+    **Note:** Use `default-features = false` to avoid pulling in ORT dependencies during cross-compilation.
+
+2. Use the model:
+
+    **Option A: Factory pattern**
+    ```rust
+    use od_opencv::{ImageBuffer, Model};
+
+    let mut model = Model::rknn("yolov8n.rknn", 80).expect("Failed to load model");
+
+    let img = image::open("image.jpg").expect("Failed to load image");
+    let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+    let (bboxes, class_ids, confidences) = model.forward(&img_buffer, 0.51, 0.45)
+        .expect("Inference failed");
+    ```
+
+    **Option B: Direct struct access**
+    ```rust
+    use od_opencv::{ImageBuffer, ModelUltralyticsRknn};
+
+    let mut model = ModelUltralyticsRknn::new_from_file(
+        "yolov8n.rknn",
+        80,       // num_classes
+        vec![],   // class_filters (empty = all classes)
+    ).expect("Failed to load model");
+
+    let img = image::open("image.jpg").expect("Failed to load image");
+    let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+    let (bboxes, class_ids, confidences) = model.forward(&img_buffer, 0.51, 0.45)
+        .expect("Inference failed");
+    ```
+
+    Input size is auto-detected from the model (no need to specify it manually).
+
+    If `librknnmrt.so` is not at the default path (`/usr/lib/librknnmrt.so`), use `new_with_lib`:
+    ```rust
+    let mut model = ModelUltralyticsRknn::new_with_lib(
+        "yolov8n.rknn",
+        "/opt/rknn/lib/librknnmrt.so",
+        80,
+        vec![],
+    ).expect("Failed to load model");
+    ```
+
+    **Note on confidence threshold:** INT8 quantization causes `sigmoid(0) = 0.5` to dequantize to ~0.502. Use a threshold > 0.502 (e.g. `0.51` literally) to avoid false positives from zero-initialized outputs.
+
+    **Warning:** The RKNN backend uses `unsafe` code extensively - raw pointer arithmetic for nearest-neighbor resize, `get_unchecked` for NC1HWC2 tensor access, and FFI calls to `librknnmrt.so` via `rknn-runtime`. Use at your own risk.
+
+3. Cross-compile and deploy:
+    ```bash
+    cross build --target armv7-unknown-linux-gnueabihf --release \
+        --example yolo_v8_n_rknn --no-default-features --features rknn-backend
+    scp target/armv7-unknown-linux-gnueabihf/release/examples/yolo_v8_n_rknn user@device:~/
+    ```
+
 ## Features
 
 ### Letterbox Preprocessing
@@ -494,3 +568,5 @@ Your existing code using `ModelUltralyticsV8`, `ModelYOLOClassic`, etc. will con
 
 * Rust OpenCV's bindings - https://github.com/twistedfall/opencv-rust
 * Go OpenCV's bindings (for ready-to-go Makefile) - https://github.com/hybridgroup/gocv
+* RKNN Runtime (Rust bindings for Rockchip NPU) - https://github.com/LdDl/rknn-runtime
+* ONNX to RKNN conversion for RV1106 - https://github.com/LdDl/rv1106-yolov8
