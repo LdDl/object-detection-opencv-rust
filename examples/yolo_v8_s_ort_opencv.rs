@@ -18,7 +18,7 @@ use od_opencv::{Model, ModelTrait};
 
 fn main() {
     // Initialize ORT runtime
-    ort::init().commit().expect("Failed to initialize ORT");
+    ort::init().commit();
 
     let classes_labels: Vec<&str> = vec![
         "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",

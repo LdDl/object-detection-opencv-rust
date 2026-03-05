@@ -19,7 +19,7 @@ use ort::execution_providers::TensorRTExecutionProvider;
 use crate::bbox::BBox;
 use crate::image_buffer::ImageBuffer;
 use crate::postprocess::{Detection, nms, filter_by_class, detections_to_vecs, argmax};
-use crate::preprocessing::{preprocess, PreprocessMeta};
+use crate::preprocessing::{preprocess_into, PreprocessMeta};
 
 use super::OrtModelError;
 
@@ -32,6 +32,8 @@ pub struct ModelYOLOv5Ort {
     input_height: u32,
     class_filters: Vec<usize>,
     use_letterbox: bool,
+    /// Pre-allocated NCHW f32 tensor buffer (avoids per-frame allocation).
+    tensor_buf: ndarray::Array4<f32>,
 }
 
 impl ModelYOLOv5Ort {
@@ -68,6 +70,7 @@ impl ModelYOLOv5Ort {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         })
     }
 
@@ -94,6 +97,7 @@ impl ModelYOLOv5Ort {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         })
     }
 
@@ -120,6 +124,7 @@ impl ModelYOLOv5Ort {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         })
     }
 
@@ -143,6 +148,7 @@ impl ModelYOLOv5Ort {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         }
     }
 
@@ -174,17 +180,16 @@ impl ModelYOLOv5Ort {
         conf_threshold: f32,
         nms_threshold: f32,
     ) -> Result<(Vec<BBox>, Vec<usize>, Vec<f32>), OrtModelError> {
-        // Preprocess
-        let (tensor, meta) = preprocess(
+        // Preprocess into pre-allocated buffer (zero allocation)
+        let meta = preprocess_into(
             image,
-            self.input_width,
-            self.input_height,
+            &mut self.tensor_buf,
             self.use_letterbox,
         );
 
         // Run inference using TensorRef (no copy)
         let outputs = self.session.run(
-            inputs!["images" => TensorRef::from_array_view(&tensor)?]
+            inputs!["images" => TensorRef::from_array_view(&self.tensor_buf)?]
         )?;
 
         // Get output tensor by name and extract as owned ndarray

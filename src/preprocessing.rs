@@ -154,14 +154,29 @@ mod image_preprocessing {
     /// Converts an ImageBuffer (RGB) to a normalized float32 tensor in NCHW format.
     pub fn to_nchw_tensor(img: &ImageBuffer) -> Array4<f32> {
         let (height, width, channels) = img.shape();
-        let data = img.as_array();
-
         let mut tensor = Array4::<f32>::zeros((1, channels, height, width));
+        let inv_255 = 1.0f32 / 255.0;
 
-        for c in 0..channels {
+        if let (Some(src), Some(dst)) = (img.as_slice(), tensor.as_slice_mut()) {
+            let hw = height * width;
+            // Iterate in HWC order (cache-friendly for source)
             for h in 0..height {
+                let row_offset = h * width;
                 for w in 0..width {
-                    tensor[[0, c, h, w]] = data[[h, w, c]] as f32 / 255.0;
+                    let src_idx = (row_offset + w) * channels;
+                    let dst_base = row_offset + w;
+                    for c in 0..channels {
+                        dst[c * hw + dst_base] = src[src_idx + c] as f32 * inv_255;
+                    }
+                }
+            }
+        } else {
+            let data = img.as_array();
+            for c in 0..channels {
+                for h in 0..height {
+                    for w in 0..width {
+                        tensor[[0, c, h, w]] = data[[h, w, c]] as f32 * inv_255;
+                    }
                 }
             }
         }
@@ -181,41 +196,174 @@ mod image_preprocessing {
     /// Normalized f32 tensor in NCHW format with RGB channel order
     pub fn bgr_hwc_to_rgb_nchw_tensor(bgr: &ndarray::ArrayView3<u8>) -> Array4<f32> {
         let (height, width, _channels) = bgr.dim();
-
         let mut tensor = Array4::<f32>::zeros((1, 3, height, width));
+        let inv_255 = 1.0f32 / 255.0;
 
-        for h in 0..height {
-            for w in 0..width {
-                // BGR → RGB swap happens here, fused with normalization
-                // R from index 2
-                tensor[[0, 0, h, w]] = bgr[[h, w, 2]] as f32 / 255.0;
-                // G from index 1
-                tensor[[0, 1, h, w]] = bgr[[h, w, 1]] as f32 / 255.0;
-                // B from index 0
-                tensor[[0, 2, h, w]] = bgr[[h, w, 0]] as f32 / 255.0;
+        if let (Some(src), Some(dst)) = (bgr.as_slice(), tensor.as_slice_mut()) {
+            let hw = height * width;
+            for h in 0..height {
+                let row_offset = h * width;
+                for w in 0..width {
+                    let src_idx = (row_offset + w) * 3;
+                    let dst_base = row_offset + w;
+                    // BGR → RGB swap fused with normalization
+                    dst[dst_base] = src[src_idx + 2] as f32 * inv_255;          // R
+                    dst[hw + dst_base] = src[src_idx + 1] as f32 * inv_255;     // G
+                    dst[2 * hw + dst_base] = src[src_idx] as f32 * inv_255;     // B
+                }
+            }
+        } else {
+            for h in 0..height {
+                for w in 0..width {
+                    tensor[[0, 0, h, w]] = bgr[[h, w, 2]] as f32 * inv_255;
+                    tensor[[0, 1, h, w]] = bgr[[h, w, 1]] as f32 * inv_255;
+                    tensor[[0, 2, h, w]] = bgr[[h, w, 0]] as f32 * inv_255;
+                }
             }
         }
 
         tensor
     }
 
-    /// Full preprocessing pipeline: resize + normalize.
+    /// Fused bilinear resize + normalize into a pre-allocated NCHW f32 tensor.
+    ///
+    /// The tensor must have shape `(1, channels, target_height, target_width)`.
+    /// This avoids per-frame tensor allocation.
+    pub fn preprocess_into(
+        img: &ImageBuffer,
+        tensor: &mut Array4<f32>,
+        use_letterbox: bool,
+    ) -> PreprocessMeta {
+        let (orig_height, orig_width, channels) = img.shape();
+        let shape = tensor.shape();
+        let th = shape[2];
+        let tw = shape[3];
+
+        if let Some(src) = img.as_slice() {
+            let dst = tensor.as_slice_mut().unwrap();
+            let hw = th * tw;
+            let inv_255 = 1.0f32 / 255.0;
+
+            if use_letterbox {
+                let scale = f32::min(
+                    tw as f32 / orig_width as f32,
+                    th as f32 / orig_height as f32,
+                );
+                let new_width = (orig_width as f32 * scale).round() as usize;
+                let new_height = (orig_height as f32 * scale).round() as usize;
+                let pad_left = (tw - new_width) / 2;
+                let pad_top = (th - new_height) / 2;
+
+                let pad_val = 114.0f32 * inv_255;
+                for c in 0..channels {
+                    for i in 0..hw {
+                        dst[c * hw + i] = pad_val;
+                    }
+                }
+
+                bilinear_into(
+                    src, orig_width, orig_height, channels,
+                    dst, tw, new_width, new_height,
+                    pad_left, pad_top, inv_255,
+                );
+
+                PreprocessMeta::Letterbox(LetterboxMeta {
+                    scale,
+                    pad_left: pad_left as i32,
+                    pad_top: pad_top as i32,
+                    original_width: orig_width as i32,
+                    original_height: orig_height as i32,
+                })
+            } else {
+                bilinear_into(
+                    src, orig_width, orig_height, channels,
+                    dst, tw, tw, th,
+                    0, 0, inv_255,
+                );
+
+                PreprocessMeta::Stretch(StretchMeta {
+                    scale_x: orig_width as f32 / tw as f32,
+                    scale_y: orig_height as f32 / th as f32,
+                    original_width: orig_width as i32,
+                    original_height: orig_height as i32,
+                })
+            }
+        } else {
+            // Fallback: non-contiguous data
+            let (new_tensor, meta) = preprocess(img, tw as u32, th as u32, use_letterbox);
+            tensor.assign(&new_tensor);
+            meta
+        }
+    }
+
+    /// Full preprocessing pipeline: resize + normalize (allocating version).
+    ///
+    /// Uses a fused resize+normalize path when possible (contiguous source data),
+    /// performing bilinear interpolation directly into the NCHW f32 tensor
+    /// without intermediate image allocations.
     pub fn preprocess(
         img: &ImageBuffer,
         target_width: u32,
         target_height: u32,
         use_letterbox: bool,
     ) -> (Array4<f32>, PreprocessMeta) {
-        let (resized, meta) = if use_letterbox {
-            let (resized, meta) = resize_letterbox(img, target_width, target_height);
-            (resized, PreprocessMeta::Letterbox(meta))
-        } else {
-            let (resized, meta) = resize_stretch(img, target_width, target_height);
-            (resized, PreprocessMeta::Stretch(meta))
-        };
+        let (_orig_height, _orig_width, channels) = img.shape();
+        let th = target_height as usize;
+        let tw = target_width as usize;
 
-        let tensor = to_nchw_tensor(&resized);
+        let mut tensor = Array4::<f32>::zeros((1, channels, th, tw));
+        let meta = preprocess_into(img, &mut tensor, use_letterbox);
         (tensor, meta)
+    }
+
+    /// Core bilinear interpolation loop writing into NCHW f32 slice.
+    #[inline(always)]
+    fn bilinear_into(
+        src: &[u8], orig_width: usize, orig_height: usize, channels: usize,
+        dst: &mut [f32], dst_stride: usize,
+        new_width: usize, new_height: usize,
+        pad_left: usize, pad_top: usize,
+        inv_255: f32,
+    ) {
+        let hw = dst.len() / channels;
+        let sx_scale = orig_width as f32 / new_width as f32;
+        let sy_scale = orig_height as f32 / new_height as f32;
+
+        for oh in 0..new_height {
+            let sy = (oh as f32 + 0.5) * sy_scale - 0.5;
+            let sy0 = (sy.floor() as isize).max(0) as usize;
+            let sy1 = (sy0 + 1).min(orig_height - 1);
+            let fy = sy - sy.floor();
+
+            let dst_y = oh + pad_top;
+
+            for ow in 0..new_width {
+                let sx = (ow as f32 + 0.5) * sx_scale - 0.5;
+                let sx0 = (sx.floor() as isize).max(0) as usize;
+                let sx1 = (sx0 + 1).min(orig_width - 1);
+                let fx = sx - sx.floor();
+
+                let dst_base = dst_y * dst_stride + ow + pad_left;
+
+                let w00 = (1.0 - fx) * (1.0 - fy);
+                let w01 = fx * (1.0 - fy);
+                let w10 = (1.0 - fx) * fy;
+                let w11 = fx * fy;
+
+                let s00 = (sy0 * orig_width + sx0) * channels;
+                let s01 = (sy0 * orig_width + sx1) * channels;
+                let s10 = (sy1 * orig_width + sx0) * channels;
+                let s11 = (sy1 * orig_width + sx1) * channels;
+
+                for c in 0..channels {
+                    let val = src[s00 + c] as f32 * w00
+                        + src[s01 + c] as f32 * w01
+                        + src[s10 + c] as f32 * w10
+                        + src[s11 + c] as f32 * w11;
+                    dst[c * hw + dst_base] = val * inv_255;
+                }
+            }
+        }
     }
 }
 

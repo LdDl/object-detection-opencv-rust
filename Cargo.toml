@@ -10,7 +10,7 @@ keywords = [
   "onnx",
 ]
 license = "MIT"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -304,13 +304,13 @@ required-features = ["opencv-backend"]
 
 [dependencies]
 lazy_static = "1.5.0"
-ndarray = "0.16"
+ndarray = "0.17"
 
 # OpenCV backend (dnn feature is added via opencv-backend feature flag to avoid conflicts with ORT)
 opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs", "imgproc"], optional = true }
 
 # ORT (ONNX runtime) backend
-ort = { version = "2.0.0-rc.10", optional = true }
+ort = { version = "2.0.0-rc.12", optional = true }
 image = { version = "0.25", optional = true }
 
 # RKNN NPU backend
