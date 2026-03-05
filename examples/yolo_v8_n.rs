@@ -22,6 +22,9 @@ fn main() {
 
     let mut model = Model::opencv("pretrained/yolov8n.onnx", (net_width, net_height), DnnBackend::Cuda, DnnTarget::Cuda).unwrap();
     let mut frame = imread("images/dog.jpg", 1).unwrap();
+    let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
+    let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
+    let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
     let start = Instant::now();
     let (bboxes, class_ids, confidences) = model.forward(&frame, 0.25, 0.4).unwrap();
     println!("Inference time: {:?}", start.elapsed());

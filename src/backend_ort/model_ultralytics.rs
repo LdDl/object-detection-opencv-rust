@@ -13,13 +13,13 @@ use ort::execution_providers::TensorRTExecutionProvider;
 use crate::bbox::BBox;
 use crate::image_buffer::ImageBuffer;
 use crate::postprocess::{Detection, nms, filter_by_class, detections_to_vecs, argmax};
-use crate::preprocessing::{preprocess, PreprocessMeta};
+use crate::preprocessing::{preprocess_into, PreprocessMeta};
 
 /// Error type for ORT model operations.
 #[derive(Debug)]
 pub enum OrtModelError {
     /// Error from ONNX Runtime
-    Ort(ort::Error),
+    Ort(String),
     /// Invalid model output shape
     InvalidOutputShape(String),
     /// Preprocessing error
@@ -38,9 +38,9 @@ impl std::fmt::Display for OrtModelError {
 
 impl std::error::Error for OrtModelError {}
 
-impl From<ort::Error> for OrtModelError {
-    fn from(e: ort::Error) -> Self {
-        OrtModelError::Ort(e)
+impl<T> From<ort::Error<T>> for OrtModelError {
+    fn from(e: ort::Error<T>) -> Self {
+        OrtModelError::Ort(format!("{}", e))
     }
 }
 
@@ -53,6 +53,8 @@ pub struct ModelUltralyticsOrt {
     input_height: u32,
     class_filters: Vec<usize>,
     use_letterbox: bool,
+    /// Pre-allocated NCHW f32 tensor buffer (avoids per-frame allocation).
+    tensor_buf: ndarray::Array4<f32>,
 }
 
 impl ModelUltralyticsOrt {
@@ -89,6 +91,7 @@ impl ModelUltralyticsOrt {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         })
     }
 
@@ -115,6 +118,7 @@ impl ModelUltralyticsOrt {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         })
     }
 
@@ -141,6 +145,7 @@ impl ModelUltralyticsOrt {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         })
     }
 
@@ -164,6 +169,7 @@ impl ModelUltralyticsOrt {
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
+            tensor_buf: ndarray::Array4::zeros((1, 3, input_size.1 as usize, input_size.0 as usize)),
         }
     }
 
@@ -195,17 +201,16 @@ impl ModelUltralyticsOrt {
         conf_threshold: f32,
         nms_threshold: f32,
     ) -> Result<(Vec<BBox>, Vec<usize>, Vec<f32>), OrtModelError> {
-        // Preprocess
-        let (tensor, meta) = preprocess(
+        // Preprocess into pre-allocated buffer (zero allocation)
+        let meta = preprocess_into(
             image,
-            self.input_width,
-            self.input_height,
+            &mut self.tensor_buf,
             self.use_letterbox,
         );
 
         // Run inference using TensorRef (no copy)
         let outputs = self.session.run(
-            inputs!["images" => TensorRef::from_array_view(&tensor)?]
+            inputs!["images" => TensorRef::from_array_view(&self.tensor_buf)?]
         )?;
 
         // Get output tensor by name and extract as owned ndarray
