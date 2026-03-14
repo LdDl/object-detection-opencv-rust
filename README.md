@@ -8,33 +8,22 @@ This crate provides structures and methods for solving object detection tasks us
 
 - **ORT backend** (default): Pure Rust, no OpenCV required, uses ONNX Runtime
 - **OpenCV backend**: Uses [OpenCV's DNN module](https://docs.opencv.org/4.8.0/d2/d58/tutorial_table_of_content_dnn.html), supports Darknet format
+- **TensorRT backend**: Direct TensorRT inference via [tensorrt-infer](https://crates.io/crates/tensorrt-infer), for NVIDIA GPUs and Jetson devices
 - **RKNN backend**: Rockchip NPU inference for edge devices (RV1106 tested only on LuckFox Pico Ultra W)
 
-| Network type  | ORT (ONNX) | OpenCV (ONNX) | OpenCV (Darknet) |
-| ------------- | ---------- | ------------- | ---------------- |
-| YOLO v3 tiny  | :x:        | :warning: (need to test) | :white_check_mark: |
-| YOLO v4 tiny  | :x:        | :warning: (need to test) | :white_check_mark: |
-| YOLO v7 tiny  | :x:        | :warning: (need to test) | :white_check_mark: |
-| YOLO v3       | :x:        | :warning: (need to test) | :white_check_mark: |
-| YOLO v4       | :x:        | :warning: (need to test) | :white_check_mark: |
-| YOLO v7       | :x:        | :warning: (need to test) | :white_check_mark: |
-| YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: |
-| YOLO v5 n/s/m/l/x  | :white_check_mark: (uses `Model::yolov5_ort()`) | :white_check_mark: (uses `Model::yolov5_opencv()`) | :x: |
-| YOLO v8 n     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
-| YOLO v8 s     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
-| YOLO v8 m     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
-| YOLO v8 l     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
-| YOLO v8 x     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) |
-| YOLO v9 t     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v9 s     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v9 m     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v9 c     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v9 e     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v11 n    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v11 s    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v11 m    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v11 l    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
-| YOLO v11 x    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: |
+| Network type  | ORT (ONNX) | OpenCV (ONNX) | OpenCV (Darknet) | TensorRT (.engine) |
+| ------------- | ---------- | ------------- | ---------------- | ------------------ |
+| YOLO v3 tiny  | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v4 tiny  | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v7 tiny  | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v3       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v4       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v7       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
+| YOLO v5 n/s/m/l/x  | :white_check_mark: (uses `Model::yolov5_ort()`) | :white_check_mark: (uses `Model::yolov5_opencv()`) | :x: | :x: |
+| YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
+| YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
+| YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 
 **Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. For opencv-backend it is required to use OpenCV v4.11+ for best compatibility.
 
@@ -48,6 +37,7 @@ This crate provides structures and methods for solving object detection tasks us
 - [Usage](#usage)
   - [ORT Backend (Default)](#ort-backend-default)
   - [OpenCV Backend](#opencv-backend)
+  - [TensorRT Backend](#tensorrt-backend)
   - [RKNN Backend](#rknn-backend)
 - [Features](#features)
 - [Migration from 0.3.x](#migration-from-03x)
@@ -98,12 +88,13 @@ I'm not sure it is intended to be used in multiple threads (PR's are welcome). B
 
 ## Backends
 
-This crate supports two inference backends:
+This crate supports multiple inference backends:
 
 | Backend | Default | OpenCV Required | GPU Support | Models Supported |
 |---------|---------|-----------------|-------------|------------------|
 | `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX) |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions |
+| `tensorrt-backend` | No | No | NVIDIA GPU (TensorRT) | YOLOv8/v9/v11 (.engine) |
 | `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11 (.rknn) |
 
 **Warning: CUDA Conflict**
@@ -127,8 +118,11 @@ od_opencv = { version = "0.6", features = ["ort-tensorrt-backend"] }
 # Use OpenCV backend (required for Darknet models)
 od_opencv = { version = "0.6", default-features = false, features = ["opencv-backend"] }
 
+# Use TensorRT backend (NVIDIA GPUs, Jetson devices)
+od_opencv = { version = "0.8", default-features = false, features = ["tensorrt-backend"] }
+
 # Use RKNN backend (Rockchip NPU devices)
-od_opencv = { version = "0.6", default-features = false, features = ["rknn-backend"] }
+od_opencv = { version = "0.8", default-features = false, features = ["rknn-backend"] }
 ```
 
 ## Prerequisites
@@ -148,6 +142,28 @@ For sure you must have OpenCV installed with DNN extra module. If you need to ul
 I love to use this [Makefile](https://github.com/hybridgroup/gocv/blob/release/Makefile) with little adjustment (OpenCV's version / enabling python bindings) for my needs.
 
 Tested with OpenCV v4.11.0 - v4.12.0. Rust bindings version: v0.96.0
+
+### For TensorRT Backend
+
+- NVIDIA GPU with CUDA support
+- CUDA toolkit with `libcudart`
+- TensorRT (6.x, 8.x, or 10.x) with `libnvinfer`
+- C++ compiler supporting C++14
+
+Engine files must be built from ONNX using `trtexec` on the target machine. Engine files are **not portable** between GPU architectures or TensorRT versions.
+
+```bash
+trtexec --onnx=yolov8n.onnx --saveEngine=yolov8n.engine --fp16
+```
+
+Tested platforms:
+
+| Platform | TensorRT | CUDA | Architecture |
+|---|---|---|---|
+| Jetson Nano (JetPack 4.6) | 8.2 | 10.2 | aarch64 |
+| Desktop (RTX 3060, Arch Linux) | 10.15 | 12.x | x86_64 |
+
+For non-standard CUDA/TensorRT installation paths, set environment variables `CUDA_HOME`, `CUDA_LIB_DIR`, `TENSORRT_LIB_DIR`. See [tensorrt-infer-sys](https://crates.io/crates/tensorrt-infer-sys) for details.
 
 ### Getting Models
 
@@ -446,6 +462,62 @@ The OpenCV backend is required for Darknet models (v3/v4/v7) and provides access
 
 8. If anything is going wrong, feel free to [open an issue](https://github.com/LdDl/object-detection-opencv-rust/issues/new)
 
+### TensorRT Backend
+
+The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer](https://crates.io/crates/tensorrt-infer). It supports TensorRT 6-8 (Jetson Nano with JetPack 4.6) and TensorRT 10+ (desktop GPUs). The C++ wrapper handles API differences at compile time.
+
+1. Build an engine file from ONNX on the target machine:
+    ```bash
+    trtexec --onnx=pretrained/yolov8n.onnx --saveEngine=pretrained/yolov8n.engine --fp16
+    ```
+
+2. Add to `Cargo.toml`:
+    ```toml
+    [dependencies]
+    od_opencv = { version = "0.8", default-features = false, features = ["tensorrt-backend"] }
+    image = "0.25"
+    ```
+
+3. Use the model:
+
+    **Option A: Factory pattern**
+    ```rust
+    use od_opencv::{ImageBuffer, Model};
+
+    let mut model = Model::tensorrt("pretrained/yolov8n.engine", (640, 640))
+        .expect("Failed to load engine");
+
+    let img = image::open("images/dog.jpg").expect("Failed to load image");
+    let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+    let (bboxes, class_ids, confidences) = model.forward(&img_buffer, 0.25, 0.4)
+        .expect("Inference failed");
+    ```
+
+    **Option B: Direct struct access**
+    ```rust
+    use od_opencv::{ImageBuffer, backend_tensorrt::ModelUltralyticsRt};
+
+    let mut model = ModelUltralyticsRt::new_from_file(
+        "pretrained/yolov8n.engine",
+        (640, 640),
+        vec![],   // class_filters (empty = all classes)
+    ).expect("Failed to load engine");
+
+    let img = image::open("images/dog.jpg").expect("Failed to load image");
+    let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+    let (bboxes, class_ids, confidences) = model.forward(&img_buffer, 0.25, 0.4)
+        .expect("Inference failed");
+    ```
+
+4. Run:
+    ```bash
+    cargo run --example yolo_v8_n_tensorrt --no-default-features --features tensorrt-backend --release
+    ```
+
+**Note:** Engine files are tied to the specific GPU architecture and TensorRT version. You must rebuild the `.engine` file on each target machine.
+
 ### RKNN Backend
 
 The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https://github.com/LdDl/rknn-runtime) crate. Tested on LuckFox Pico Ultra W (RV1106) with a COCO 320x320 model. For that specific size I've converted ONNX model to `.rknn` (with some preparations also) format via recommendations here: [rv1106-yolov8](https://github.com/LdDl/rv1106-yolov8).
@@ -520,7 +592,7 @@ The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https:/
 
 For non-traditional YOLO models (v8/v9/v11), you can enable letterbox preprocessing which maintains aspect ratio during resize and pads with gray borders. This matches the preprocessing used during Ultralytics training.
 
-This works for both ORT and OpenCV backends.
+This works for ORT, OpenCV, and TensorRT backends.
 
 ```toml
 # ORT backend with letterbox
@@ -570,3 +642,5 @@ Your existing code using `ModelUltralyticsV8`, `ModelYOLOClassic`, etc. will con
 * Go OpenCV's bindings (for ready-to-go Makefile) - https://github.com/hybridgroup/gocv
 * RKNN Runtime (Rust bindings for Rockchip NPU) - https://github.com/LdDl/rknn-runtime
 * ONNX to RKNN conversion for RV1106 - https://github.com/LdDl/rv1106-yolov8
+* TensorRT safe Rust wrappers - https://github.com/LdDl/tensorrt-infer
+* TensorRT FFI bindings - https://github.com/LdDl/tensorrt-infer-sys

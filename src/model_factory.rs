@@ -448,6 +448,47 @@ impl Model {
 }
 
 // ============================================================================
+// TensorRT Backend
+// ============================================================================
+
+#[cfg(feature = "tensorrt-backend")]
+impl Model {
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11) using TensorRT.
+    ///
+    /// Loads a pre-built `.engine` file. The engine must be built separately
+    /// using `trtexec` for the target GPU.
+    ///
+    /// # Arguments
+    /// * `engine_path` - Path to the pre-built `.engine` file
+    /// * `input_size` - Model input size as (width, height)
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::tensorrt("yolov8n.engine", (640, 640))?;
+    /// ```
+    pub fn tensorrt(
+        engine_path: &str,
+        input_size: (u32, u32),
+    ) -> Result<crate::backend_tensorrt::ModelUltralyticsRt, crate::backend_tensorrt::TrtModelError> {
+        crate::backend_tensorrt::ModelUltralyticsRt::new_from_file(engine_path, input_size, vec![])
+    }
+
+    /// Creates a new Ultralytics YOLO model with class filtering using TensorRT.
+    ///
+    /// # Arguments
+    /// * `engine_path` - Path to the pre-built `.engine` file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `class_filters` - List of class indices to detect (empty for all classes)
+    pub fn tensorrt_filtered(
+        engine_path: &str,
+        input_size: (u32, u32),
+        class_filters: Vec<usize>,
+    ) -> Result<crate::backend_tensorrt::ModelUltralyticsRt, crate::backend_tensorrt::TrtModelError> {
+        crate::backend_tensorrt::ModelUltralyticsRt::new_from_file(engine_path, input_size, class_filters)
+    }
+}
+
+// ============================================================================
 // RKNN Backend
 // ============================================================================
 

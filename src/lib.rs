@@ -24,11 +24,11 @@ pub use image_buffer::{ChannelOrder, ImageBuffer};
 pub use model_trait::ObjectDetector;
 pub use model_factory::Model;
 
-// Pure Rust preprocessing/postprocessing (for ort-backend and rknn-backend)
-#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
+// Pure Rust preprocessing/postprocessing (for ort-backend, rknn-backend, tensorrt-backend)
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub mod preprocessing;
 
-#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub mod postprocess;
 
 // OpenCV DNN backend - requires opencv/dnn feature
@@ -42,6 +42,10 @@ pub mod backend_ort;
 // RKNN NPU backend
 #[cfg(feature = "rknn-backend")]
 pub mod backend_rknn;
+
+// TensorRT backend
+#[cfg(feature = "tensorrt-backend")]
+pub mod backend_tensorrt;
 
 // DNN backend/target enums for opencv-backend
 #[cfg(feature = "opencv-backend")]
@@ -88,6 +92,13 @@ pub use backend_rknn::ModelUltralyticsRknn;
 
 #[cfg(feature = "rknn-backend")]
 pub use backend_rknn::RknnModelError;
+
+// Re-exports for tensorrt-backend
+#[cfg(feature = "tensorrt-backend")]
+pub use backend_tensorrt::ModelUltralyticsRt;
+
+#[cfg(feature = "tensorrt-backend")]
+pub use backend_tensorrt::TrtModelError;
 
 // OpenCV compatibility layer for ORT backend
 // Allows using ORT inference with OpenCV Mat input
