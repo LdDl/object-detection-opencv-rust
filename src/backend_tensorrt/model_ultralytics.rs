@@ -268,6 +268,59 @@ impl ModelUltralyticsRt {
     }
 }
 
+// OpenCV compatibility: implement ModelTrait for Mat input
+#[cfg(feature = "tensorrt-opencv-compat")]
+mod opencv_compat_impl {
+    use super::*;
+    use crate::image_buffer::ImageBuffer;
+    use opencv::core::{Mat, Rect};
+    use opencv::Error as OpenCvError;
+
+    impl ModelUltralyticsRt {
+        /// Runs inference on an OpenCV Mat image.
+        ///
+        /// Converts the BGR Mat to ImageBuffer, runs TensorRT inference,
+        /// and returns results as OpenCV Rect.
+        ///
+        /// # Arguments
+        /// * `image` - Input BGR Mat (from VideoCapture, imread, etc.)
+        /// * `conf_threshold` - Confidence threshold (0.0 - 1.0)
+        /// * `nms_threshold` - NMS IoU threshold (0.0 - 1.0)
+        ///
+        /// # Returns
+        /// Tuple of (bounding boxes as opencv::Rect, class IDs, confidence scores)
+        pub fn forward_mat(
+            &mut self,
+            image: &Mat,
+            conf_threshold: f32,
+            nms_threshold: f32,
+        ) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), OpenCvError> {
+            let img_buf = ImageBuffer::from_mat(image)?;
+            let (bboxes, class_ids, confidences) = self
+                .forward(&img_buf, conf_threshold, nms_threshold)
+                .map_err(|e| {
+                    OpenCvError::new(opencv::core::StsError, format!("TensorRT error: {}", e))
+                })?;
+            let rects: Vec<Rect> = bboxes
+                .into_iter()
+                .map(|bbox| Rect::new(bbox.x, bbox.y, bbox.width, bbox.height))
+                .collect();
+            Ok((rects, class_ids, confidences))
+        }
+    }
+
+    impl crate::opencv_compat::ModelTrait for ModelUltralyticsRt {
+        fn forward(
+            &mut self,
+            image: &Mat,
+            conf_threshold: f32,
+            nms_threshold: f32,
+        ) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), OpenCvError> {
+            self.forward_mat(image, conf_threshold, nms_threshold)
+        }
+    }
+}
+
 impl crate::ObjectDetector for ModelUltralyticsRt {
     type Input = ImageBuffer;
     type Error = TrtModelError;

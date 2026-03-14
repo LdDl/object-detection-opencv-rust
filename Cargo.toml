@@ -10,7 +10,7 @@ keywords = [
   "onnx",
 ]
 license = "MIT"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Dimitrii Lopanov <sexykdi@gmail.com>"]
@@ -49,6 +49,10 @@ rknn-backend = ["dep:rknn-runtime", "dep:image"]
 
 # TensorRT backend (Jetson Nano, desktop NVIDIA GPUs)
 tensorrt-backend = ["dep:image", "dep:tensorrt-infer"]
+
+# Compatibility layer: allows TensorRT backend to accept OpenCV Mat
+# Note: This does NOT enable OpenCV's DNN module to avoid conflicts
+tensorrt-opencv-compat = ["tensorrt-backend", "dep:opencv"]
 
 # Preprocessing options
 letterbox = []
@@ -309,6 +313,11 @@ required-features = ["opencv-backend"]
 [[example]]
 name = "yolo_v8_n_tensorrt"
 required-features = ["tensorrt-backend"]
+
+# YOLOv8 - TensorRT + OpenCV compatibility example
+[[example]]
+name = "yolo_v8_n_tensorrt_opencv"
+required-features = ["tensorrt-opencv-compat"]
 
 # YOLOv11 examples (tensorrt-backend)
 [[example]]

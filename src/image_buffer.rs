@@ -222,8 +222,8 @@ mod image_impl {
     }
 }
 
-// OpenCV conversions - available with opencv-backend feature
-#[cfg(feature = "opencv-backend")]
+// OpenCV conversions - available with opencv-backend or compat features
+#[cfg(any(feature = "opencv-backend", feature = "ort-opencv-compat", feature = "tensorrt-opencv-compat"))]
 mod opencv_impl {
     use super::*;
     use opencv::core::{Mat, MatTraitConst};

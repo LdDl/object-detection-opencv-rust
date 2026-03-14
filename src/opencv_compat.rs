@@ -1,15 +1,15 @@
-//! OpenCV compatibility layer for ORT backend.
+//! OpenCV compatibility layer for ORT and TensorRT backends.
 //!
-//! This module provides utilities for using the ORT backend with OpenCV Mat images.
+//! This module provides utilities for using the ORT/TensorRT backends with OpenCV Mat images.
 //! It enables a hybrid approach: use OpenCV for video I/O, display, and resize,
-//! while using ONNX Runtime for neural network inference.
+//! while using ONNX Runtime or TensorRT for neural network inference.
 //!
 //! # Features
 //!
 //! - Zero-copy Mat to ArrayView3 conversion (when Mat is continuous)
 //! - OpenCV-based resize functions that work with BGR images
 //! - Fused BGR→RGB + normalization for optimal performance
-//! - `ModelTrait` for ORT models that accept OpenCV Mat input
+//! - `ModelTrait` for ORT/TensorRT models that accept OpenCV Mat input
 
 use ndarray::{Array3, Array4, ArrayView3};
 use opencv::{
@@ -22,7 +22,7 @@ use crate::preprocessing::{LetterboxMeta, StretchMeta, PreprocessMeta};
 
 /// A trait for object detection models that work with OpenCV Mat.
 ///
-/// This trait is designed for the ORT backend with OpenCV compatibility.
+/// This trait is designed for the ORT/TensorRT backends with OpenCV compatibility.
 /// It does NOT depend on OpenCV's DNN module, avoiding static linking conflicts.
 ///
 /// For models using the full OpenCV DNN backend, see `od_opencv::model::ModelTrait`.
