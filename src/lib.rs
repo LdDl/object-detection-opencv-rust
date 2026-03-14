@@ -100,11 +100,11 @@ pub use backend_tensorrt::ModelUltralyticsRt;
 #[cfg(feature = "tensorrt-backend")]
 pub use backend_tensorrt::TrtModelError;
 
-// OpenCV compatibility layer for ORT backend
-// Allows using ORT inference with OpenCV Mat input
+// OpenCV compatibility layer for ORT/TensorRT backends
+// Allows using ORT/TensorRT inference with OpenCV Mat input
 // Provides ModelTrait that does NOT depend on opencv/dnn
-#[cfg(feature = "ort-opencv-compat")]
+#[cfg(any(feature = "ort-opencv-compat", feature = "tensorrt-opencv-compat"))]
 pub mod opencv_compat;
 
-#[cfg(feature = "ort-opencv-compat")]
+#[cfg(any(feature = "ort-opencv-compat", feature = "tensorrt-opencv-compat"))]
 pub use opencv_compat::{mat_to_array_view, mat_to_array3, preprocess_mat, ModelTrait};

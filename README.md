@@ -518,6 +518,27 @@ The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer]
 
 **Note:** Engine files are tied to the specific GPU architecture and TensorRT version. You must rebuild the `.engine` file on each target machine.
 
+#### TensorRT with OpenCV I/O
+
+If you need OpenCV for video capture or image I/O but want TensorRT for inference, use the `tensorrt-opencv-compat` feature:
+
+```toml
+od_opencv = { version = "0.8", default-features = false, features = ["tensorrt-opencv-compat"] }
+```
+
+This enables `ModelTrait` which accepts `opencv::core::Mat` directly:
+
+```rust
+use od_opencv::{Model, ModelTrait};
+use opencv::imgcodecs;
+
+let mut model = Model::tensorrt("pretrained/yolov8n.engine", (640, 640))?;
+let img = imgcodecs::imread("image.jpg", imgcodecs::IMREAD_COLOR)?;
+let (bboxes, class_ids, confidences) = ModelTrait::forward(&mut model, &img, 0.25, 0.4)?;
+```
+
+See full example here: [examples/yolo_v8_n_tensorrt_opencv.rs](examples/yolo_v8_n_tensorrt_opencv.rs)
+
 ### RKNN Backend
 
 The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https://github.com/LdDl/rknn-runtime) crate. Tested on LuckFox Pico Ultra W (RV1106) with a COCO 320x320 model. For that specific size I've converted ONNX model to `.rknn` (with some preparations also) format via recommendations here: [rv1106-yolov8](https://github.com/LdDl/rv1106-yolov8).
