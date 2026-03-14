@@ -19,23 +19,11 @@ This crate provides structures and methods for solving object detection tasks us
 | YOLO v3       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
 | YOLO v4       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
 | YOLO v7       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
-| YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: | :warning: (need to test) |
+| YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v5 n/s/m/l/x  | :white_check_mark: (uses `Model::yolov5_ort()`) | :white_check_mark: (uses `Model::yolov5_opencv()`) | :x: | :x: |
-| YOLO v8 n     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: |
-| YOLO v8 s     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :warning: (need to test) |
-| YOLO v8 m     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :warning: (need to test) |
-| YOLO v8 l     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :warning: (need to test) |
-| YOLO v8 x     | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :warning: (need to test) |
-| YOLO v9 t     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v9 s     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v9 m     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v9 c     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v9 e     | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v11 n    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: |
-| YOLO v11 s    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v11 m    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v11 l    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
-| YOLO v11 x    | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :warning: (need to test) |
+| YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
+| YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
+| YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 
 **Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. For opencv-backend it is required to use OpenCV v4.11+ for best compatibility.
 
