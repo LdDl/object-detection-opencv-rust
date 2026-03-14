@@ -159,7 +159,7 @@ impl ImageBuffer {
 }
 
 // image crate conversions - available with ort-backend or rknn-backend
-#[cfg(any(feature = "ort-backend", feature = "rknn-backend"))]
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 mod image_impl {
     use super::*;
     use image::{DynamicImage, RgbImage};
