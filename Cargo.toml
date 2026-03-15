@@ -309,6 +309,49 @@ required-features = ["ort-backend"]
 name = "yolo_v5_n"
 required-features = ["opencv-backend"]
 
+# Darknet2ONNX examples (ort-backend, --format yolov8)
+[[example]]
+name = "yolo_v3_tiny_d2o_v8_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v3_d2o_v8_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v4_tiny_d2o_v8_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v4_d2o_v8_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v7_tiny_d2o_v8_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v7_d2o_v8_ort"
+required-features = ["ort-backend"]
+
+# Darknet2ONNX examples (ort-backend, --format yolov5)
+[[example]]
+name = "yolo_v4_tiny_d2o_v5_ort"
+required-features = ["ort-backend"]
+
+# Darknet2ONNX examples (opencv-backend, --format yolov8)
+[[example]]
+name = "yolo_v3_tiny_d2o_v8_opencv"
+required-features = ["opencv-backend"]
+
+[[example]]
+name = "yolo_v4_tiny_d2o_v8_opencv"
+required-features = ["opencv-backend"]
+
+[[example]]
+name = "yolo_v7_tiny_d2o_v8_opencv"
+required-features = ["opencv-backend"]
+
 # YOLOv8 examples (tensorrt-backend)
 [[example]]
 name = "yolo_v8_n_tensorrt"

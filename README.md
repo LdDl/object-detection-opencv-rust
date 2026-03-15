@@ -13,17 +13,19 @@ This crate provides structures and methods for solving object detection tasks us
 
 | Network type  | ORT (ONNX) | OpenCV (ONNX) | OpenCV (Darknet) | TensorRT (.engine) |
 | ------------- | ---------- | ------------- | ---------------- | ------------------ |
-| YOLO v3 tiny  | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
-| YOLO v4 tiny  | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
-| YOLO v7 tiny  | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
-| YOLO v3       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
-| YOLO v4       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
-| YOLO v7       | :x:        | :warning: (need to test) | :white_check_mark: | :x: |
+| YOLO v3 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
+| YOLO v4 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
+| YOLO v7 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
+| YOLO v3       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
+| YOLO v4       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
+| YOLO v7       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
 | YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v5 n/s/m/l/x  | :white_check_mark: (uses `Model::yolov5_ort()`) | :white_check_mark: (uses `Model::yolov5_opencv()`) | :x: | :x: |
 | YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
+
+**Note on YOLOv3/v4/v7 ONNX:** Darknet `.cfg` + `.weights` can be converted to ONNX using [darknet2onnx](https://github.com/LdDl/darknet2onnx). Use `--format yolov8` to get `[1, 84, N]` output compatible with `Model::ort()` / `Model::opencv()`, or `--format yolov5` for `[1, N, 85]` compatible with `Model::yolov5_ort()` / `Model::yolov5_opencv()`.
 
 **Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. For opencv-backend it is required to use OpenCV v4.11+ for best compatibility.
 
@@ -205,7 +207,13 @@ cargo run --example yolo_v8_n_ort_cuda --release --features=ort-cuda-backend
 # OpenCV backend examples - IMPORTANT: use --no-default-features to avoid CUDA conflicts
 cargo run --example yolo_v4_tiny --release --no-default-features --features=opencv-backend
 cargo run --example yolo_v8_n --release --no-default-features --features=opencv-backend
+
+# Darknet-to-ONNX examples (names contain "d2o") - converted via darknet2onnx
+cargo run --example yolo_v4_tiny_d2o_v8_ort --release
+cargo run --example yolo_v4_tiny_d2o_v8_opencv --release --no-default-features --features=opencv-backend
 ```
+
+> **Note:** Examples with `d2o` in the name use ONNX models converted from Darknet `.cfg` + `.weights` via [darknet2onnx]. The suffix `v8` or `v5` indicates the output format used during conversion (`--format yolov8` or `--format yolov5`).
 
 > **Note:** When running OpenCV backend examples, always use `--no-default-features` to disable the ORT backend. Without this flag, both backends will be loaded which can cause segmentation faults when using CUDA
 
@@ -659,6 +667,7 @@ Your existing code using `ModelUltralyticsV8`, `ModelYOLOClassic`, etc. will con
 * Developers of YOLOv8/v11 - https://github.com/ultralytics/ultralytics
 * ONNX Runtime - https://onnxruntime.ai/
 
+* Darknet to ONNX converter (Go CLI) - https://github.com/LdDl/darknet2onnx
 * Rust OpenCV's bindings - https://github.com/twistedfall/opencv-rust
 * Go OpenCV's bindings (for ready-to-go Makefile) - https://github.com/hybridgroup/gocv
 * RKNN Runtime (Rust bindings for Rockchip NPU) - https://github.com/LdDl/rknn-runtime
