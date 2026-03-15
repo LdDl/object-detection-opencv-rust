@@ -13,19 +13,30 @@ This crate provides structures and methods for solving object detection tasks us
 
 | Network type  | ORT (ONNX) | OpenCV (ONNX) | OpenCV (Darknet) | TensorRT (.engine) |
 | ------------- | ---------- | ------------- | ---------------- | ------------------ |
-| YOLO v3 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
-| YOLO v4 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
-| YOLO v7 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
-| YOLO v3       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
-| YOLO v4       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
-| YOLO v7       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :x: |
+| YOLO v3 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :white_check_mark: (via [darknet2onnx] + trtexec) |
+| YOLO v4 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :white_check_mark: (via [darknet2onnx] + trtexec) |
+| YOLO v7 tiny  | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :white_check_mark: (via [darknet2onnx] + trtexec) |
+| YOLO v3       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :white_check_mark: (via [darknet2onnx] + trtexec) |
+| YOLO v4       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :white_check_mark: (via [darknet2onnx] + trtexec) |
+| YOLO v7       | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: (via [darknet2onnx]) | :white_check_mark: | :white_check_mark: (via [darknet2onnx] + trtexec) |
 | YOLO v5u n/s/m/l/x | :white_check_mark: (uses `Model::ort()`) | :white_check_mark: (uses `Model::opencv()`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v5 n/s/m/l/x  | :white_check_mark: (uses `Model::yolov5_ort()`) | :white_check_mark: (uses `Model::yolov5_opencv()`) | :x: | :x: |
 | YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 
-**Note on YOLOv3/v4/v7 ONNX:** Darknet `.cfg` + `.weights` can be converted to ONNX using [darknet2onnx](https://github.com/LdDl/darknet2onnx). Use `--format yolov8` to get `[1, 84, N]` output compatible with `Model::ort()` / `Model::opencv()`, or `--format yolov5` for `[1, N, 85]` compatible with `Model::yolov5_ort()` / `Model::yolov5_opencv()`.
+**Note on YOLOv3/v4/v7 ONNX:** Darknet `.cfg` + `.weights` can be converted to ONNX using [darknet2onnx](https://github.com/LdDl/darknet2onnx). Use `--format yolov8` to get `[1, 84, N]` output compatible with `Model::ort()` / `Model::opencv()` / `Model::tensorrt()` or `--format yolov5` for `[1, N, 85]` compatible with `Model::yolov5_ort()` / `Model::yolov5_opencv()`. E.g. using `yolov8` format:
+```bash
+darknet2onnx --cfg yolov4-tiny.cfg --weights yolov4-tiny.weights --output yolov4-tiny-d2o-v8.onnx --format yolov8
+```
+
+For TensorRT inference you should prepare `.engine` file:
+```bash
+trtexec --onnx=yolov4-tiny-d2o-v8.onnx --saveEngine=yolov4-tiny-d2o-v8.engine --fp16
+```
+Also be aware: I've tested only `yolov8` format for TensorRT.
+
+[darknet2onnx]: https://github.com/LdDl/darknet2onnx
 
 **Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. For opencv-backend it is required to use OpenCV v4.11+ for best compatibility.
 

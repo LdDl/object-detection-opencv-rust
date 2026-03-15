@@ -352,6 +352,11 @@ required-features = ["opencv-backend"]
 name = "yolo_v7_tiny_d2o_v8_opencv"
 required-features = ["opencv-backend"]
 
+# Darknet2ONNX examples (tensorrt-backend, --format yolov8 → trtexec)
+[[example]]
+name = "yolo_v4_tiny_d2o_v8_tensorrt"
+required-features = ["tensorrt-backend"]
+
 # YOLOv8 examples (tensorrt-backend)
 [[example]]
 name = "yolo_v8_n_tensorrt"
