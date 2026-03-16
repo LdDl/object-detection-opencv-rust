@@ -80,11 +80,9 @@ impl ModelUltralyticsRt {
     ///
     /// # Arguments
     /// * `engine_path` - Path to the pre-built `.engine` file
-    /// * `input_size` - Model input size as (width, height)
     /// * `class_filters` - List of class indices to detect (empty for all classes)
     pub fn new_from_file(
         engine_path: &str,
-        input_size: (u32, u32),
         class_filters: Vec<usize>,
     ) -> Result<Self, TrtModelError> {
         let engine = TrtEngine::from_file(engine_path)?;
@@ -103,14 +101,8 @@ impl ModelUltralyticsRt {
                 format!("Expected input [1, 3, H, W], got {:?}", input_dims),
             ));
         }
-        if input_dims[2] != input_size.1 as i32 || input_dims[3] != input_size.0 as i32 {
-            return Err(TrtModelError::InvalidOutputShape(
-                format!(
-                    "Engine input {}x{} does not match requested {}x{}",
-                    input_dims[3], input_dims[2], input_size.0, input_size.1,
-                ),
-            ));
-        }
+        let input_width = input_dims[3] as u32;
+        let input_height = input_dims[2] as u32;
 
         let output_shape = bindings[output_binding_idx].dims.clone();
 
@@ -129,15 +121,15 @@ impl ModelUltralyticsRt {
             engine,
             context,
             stream,
-            input_width: input_size.0,
-            input_height: input_size.1,
+            input_width,
+            input_height,
             class_filters,
             #[cfg(feature = "letterbox")]
             use_letterbox: true,
             #[cfg(not(feature = "letterbox"))]
             use_letterbox: false,
             tensor_buf: ndarray::Array4::zeros((
-                1, 3, input_size.1 as usize, input_size.0 as usize,
+                1, 3, input_height as usize, input_width as usize,
             )),
             output_host_buf,
             gpu_buffers,

@@ -503,7 +503,7 @@ The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer]
     ```rust
     use od_opencv::{ImageBuffer, Model};
 
-    let mut model = Model::tensorrt("pretrained/yolov8n.engine", (640, 640))
+    let mut model = Model::tensorrt("pretrained/yolov8n.engine")
         .expect("Failed to load engine");
 
     let img = image::open("images/dog.jpg").expect("Failed to load image");
@@ -519,7 +519,6 @@ The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer]
 
     let mut model = ModelUltralyticsRt::new_from_file(
         "pretrained/yolov8n.engine",
-        (640, 640),
         vec![],   // class_filters (empty = all classes)
     ).expect("Failed to load engine");
 
@@ -535,7 +534,7 @@ The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer]
     cargo run --example yolo_v8_n_tensorrt --no-default-features --features tensorrt-backend --release
     ```
 
-**Note:** Engine files are tied to the specific GPU architecture and TensorRT version. You must rebuild the `.engine` file on each target machine.
+**Note:** Engine files are tied to the specific GPU architecture and TensorRT version. You must rebuild the `.engine` file on each target machine. Input dimensions are read directly from the engine bindings, so there is no need to pass them manually.
 
 #### TensorRT with OpenCV I/O
 
@@ -551,7 +550,7 @@ This enables `ModelTrait` which accepts `opencv::core::Mat` directly:
 use od_opencv::{Model, ModelTrait};
 use opencv::imgcodecs;
 
-let mut model = Model::tensorrt("pretrained/yolov8n.engine", (640, 640))?;
+let mut model = Model::tensorrt("pretrained/yolov8n.engine")?;
 let img = imgcodecs::imread("image.jpg", imgcodecs::IMREAD_COLOR)?;
 let (bboxes, class_ids, confidences) = ModelTrait::forward(&mut model, &img, 0.25, 0.4)?;
 ```
