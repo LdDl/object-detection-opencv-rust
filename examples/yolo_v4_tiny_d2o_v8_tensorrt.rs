@@ -9,7 +9,6 @@ fn main() {
 
     let mut model = Model::tensorrt(
         "pretrained/yolov4-tiny-d2o-v8.engine",
-        (416, 416),
     ).expect("Failed to load engine");
 
     let img = image::open("images/dog.jpg").expect("Failed to load image");

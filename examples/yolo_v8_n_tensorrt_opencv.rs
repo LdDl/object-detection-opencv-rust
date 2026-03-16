@@ -30,13 +30,9 @@ fn main() {
         "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
     ];
 
-    let net_width = 640;
-    let net_height = 640;
-
     // Create TensorRT model
     let mut model = Model::tensorrt(
         "pretrained/yolov8n.engine",
-        (net_width, net_height),
     ).expect("Failed to load engine");
 
     // Load image using OpenCV
