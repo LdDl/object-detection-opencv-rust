@@ -639,7 +639,9 @@ The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https:/
 
 This crate supports face detection using [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) from OpenCV Zoo. YuNet is an extremely lightweight model (0.083M params, 228KB ONNX) that detects faces and returns 5 facial landmarks (eyes, nose, mouth corners).
 
-The model is available for ORT, OpenCV, TensorRT, and RKNN backends. For ORT/TensorRT/RKNN, input dimensions are read from the model automatically. For OpenCV, the built-in `FaceDetectorYN` handles all preprocessing and decoding internally.
+The model is available for ORT, OpenCV, TensorRT, and RKNN backends. For ORT/TensorRT/RKNN, input dimensions are read from the model automatically and decoding is implemented in pure Rust.
+
+The OpenCV backend is a wrapper around OpenCV's built-in `FaceDetectorYN` (requires OpenCV 4.7+), which handles preprocessing, inference, decoding and NMS internally.
 
 Download the ONNX model from [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet):
 ```bash
