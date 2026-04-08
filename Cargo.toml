@@ -378,6 +378,10 @@ name = "yunet_ort"
 required-features = ["ort-backend"]
 
 [[example]]
+name = "yunet_opencv"
+required-features = ["opencv-backend"]
+
+[[example]]
 name = "yunet_tensorrt"
 required-features = ["tensorrt-backend"]
 
@@ -386,7 +390,7 @@ lazy_static = "1.5.0"
 ndarray = "0.17"
 
 # OpenCV backend (dnn feature is added via opencv-backend feature flag to avoid conflicts with ORT)
-opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs", "imgproc"], optional = true }
+opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs", "imgproc", "objdetect"], optional = true }
 
 # ORT (ONNX runtime) backend
 ort = { version = "2.0.0-rc.12", optional = true }

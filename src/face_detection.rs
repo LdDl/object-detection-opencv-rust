@@ -4,6 +4,7 @@
 //! NMS for face detections, and shared YuNet decoding logic.
 
 /// Strides used by YuNet model.
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub const STRIDES: [u32; 3] = [8, 16, 32];
 
 /// A single face detection with bounding box, landmarks, and confidence.
@@ -128,6 +129,7 @@ fn iou_face(a: &FaceDetection, b: &FaceDetection) -> f32 {
     intersection / union
 }
 
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 #[inline]
 fn sigmoid(x: f32) -> f32 {
     1.0 / (1.0 + (-x).exp())
@@ -149,6 +151,7 @@ fn sigmoid(x: f32) -> f32 {
 /// * `meta` - Preprocessing metadata for coordinate inverse transform
 /// * `conf_threshold` - Minimum confidence to keep
 /// * `out` - Output vector to append detections to
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub fn decode_yunet_stride(
     cls: &[f32],
     obj: &[f32],
@@ -246,6 +249,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
     fn test_sigmoid() {
         assert!((sigmoid(0.0) - 0.5).abs() < 0.001);
         assert!(sigmoid(10.0) > 0.999);
@@ -253,6 +257,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
     fn test_decode_yunet_stride_basic() {
         use crate::preprocessing::{PreprocessMeta, StretchMeta};
 

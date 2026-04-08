@@ -31,11 +31,11 @@ pub mod preprocessing;
 #[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub mod postprocess;
 
-// Face detection types (for ort-backend, rknn-backend, tensorrt-backend)
-#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
+// Face detection types
+#[cfg(any(feature = "opencv-backend", feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub mod face_detection;
 
-#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
+#[cfg(any(feature = "opencv-backend", feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub use face_detection::{FaceDetection, FaceDetector};
 
 // OpenCV DNN backend - requires opencv/dnn feature
@@ -82,6 +82,9 @@ pub use backend_opencv::model_yolov5;
 // model module is needed for ModelTrait (opencv-backend only - depends on dnn)
 #[cfg(feature = "opencv-backend")]
 pub use backend_opencv::model;
+
+#[cfg(feature = "opencv-backend")]
+pub use backend_opencv::ModelYuNetOpenCV;
 
 // Re-exports for ort-backend
 #[cfg(feature = "ort-backend")]

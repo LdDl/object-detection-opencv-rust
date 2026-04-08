@@ -490,6 +490,45 @@ impl Model {
     }
 }
 
+// YuNet face detection via OpenCV (FaceDetectorYN)
+#[cfg(feature = "opencv-backend")]
+impl Model {
+    /// Creates a new YuNet face detection model using OpenCV's FaceDetectorYN.
+    ///
+    /// Requires OpenCV 4.5.4+ with the `objdetect` module.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the YuNet ONNX model file
+    /// * `input_size` - Model input size as (width, height)
+    /// * `backend` - DNN backend (e.g., `DnnBackend::Cuda`, `DnnBackend::OpenCV`)
+    /// * `target` - DNN target device (e.g., `DnnTarget::Cuda`, `DnnTarget::Cpu`)
+    ///
+    /// # Example
+    /// ```ignore
+    /// use od_opencv::{Model, DnnBackend, DnnTarget};
+    ///
+    /// let mut model = Model::yunet_opencv(
+    ///     "face_detection_yunet_2023mar.onnx",
+    ///     (320, 320),
+    ///     DnnBackend::OpenCV,
+    ///     DnnTarget::Cpu,
+    /// )?;
+    /// ```
+    pub fn yunet_opencv(
+        model_path: &str,
+        input_size: (i32, i32),
+        backend: crate::dnn_backend::DnnBackend,
+        target: crate::dnn_backend::DnnTarget,
+    ) -> Result<crate::backend_opencv::ModelYuNetOpenCV, opencv::Error> {
+        crate::backend_opencv::ModelYuNetOpenCV::new_from_file(
+            model_path,
+            input_size,
+            backend.into(),
+            target.into(),
+        )
+    }
+}
+
 // ============================================================================
 // TensorRT Backend
 // ============================================================================
