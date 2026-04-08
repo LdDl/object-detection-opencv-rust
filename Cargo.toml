@@ -352,7 +352,7 @@ required-features = ["opencv-backend"]
 name = "yolo_v7_tiny_d2o_v8_opencv"
 required-features = ["opencv-backend"]
 
-# Darknet2ONNX examples (tensorrt-backend, --format yolov8 → trtexec)
+# Darknet2ONNX examples (tensorrt-backend, --format yolov8 => trtexec)
 [[example]]
 name = "yolo_v4_tiny_d2o_v8_tensorrt"
 required-features = ["tensorrt-backend"]
@@ -372,12 +372,29 @@ required-features = ["tensorrt-opencv-compat"]
 name = "yolo_v11_n_tensorrt"
 required-features = ["tensorrt-backend"]
 
+# YuNet face detection examples
+[[example]]
+name = "yunet_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yunet_opencv"
+required-features = ["opencv-backend"]
+
+[[example]]
+name = "yunet_tensorrt"
+required-features = ["tensorrt-backend"]
+
+[[example]]
+name = "yunet_rknn"
+required-features = ["rknn-backend"]
+
 [dependencies]
 lazy_static = "1.5.0"
 ndarray = "0.17"
 
 # OpenCV backend (dnn feature is added via opencv-backend feature flag to avoid conflicts with ORT)
-opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs", "imgproc"], optional = true }
+opencv = { version = "0.96.0", default-features = false, features = ["imgcodecs", "imgproc", "objdetect"], optional = true }
 
 # ORT (ONNX runtime) backend
 ort = { version = "2.0.0-rc.12", optional = true }

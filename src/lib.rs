@@ -31,6 +31,13 @@ pub mod preprocessing;
 #[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub mod postprocess;
 
+// Face detection types
+#[cfg(any(feature = "opencv-backend", feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
+pub mod face_detection;
+
+#[cfg(any(feature = "opencv-backend", feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
+pub use face_detection::{FaceDetection, FaceDetector};
+
 // OpenCV DNN backend - requires opencv/dnn feature
 #[cfg(feature = "opencv-backend")]
 pub mod backend_opencv;
@@ -76,6 +83,9 @@ pub use backend_opencv::model_yolov5;
 #[cfg(feature = "opencv-backend")]
 pub use backend_opencv::model;
 
+#[cfg(feature = "opencv-backend")]
+pub use backend_opencv::ModelYuNetOpenCV;
+
 // Re-exports for ort-backend
 #[cfg(feature = "ort-backend")]
 pub use backend_ort::ModelUltralyticsOrt;
@@ -86,6 +96,9 @@ pub use backend_ort::ModelYOLOv5Ort;
 #[cfg(feature = "ort-backend")]
 pub use backend_ort::OrtModelError;
 
+#[cfg(feature = "ort-backend")]
+pub use backend_ort::ModelYuNetOrt;
+
 // Re-exports for rknn-backend
 #[cfg(feature = "rknn-backend")]
 pub use backend_rknn::ModelUltralyticsRknn;
@@ -93,12 +106,18 @@ pub use backend_rknn::ModelUltralyticsRknn;
 #[cfg(feature = "rknn-backend")]
 pub use backend_rknn::RknnModelError;
 
+#[cfg(feature = "rknn-backend")]
+pub use backend_rknn::ModelYuNetRknn;
+
 // Re-exports for tensorrt-backend
 #[cfg(feature = "tensorrt-backend")]
 pub use backend_tensorrt::ModelUltralyticsRt;
 
 #[cfg(feature = "tensorrt-backend")]
 pub use backend_tensorrt::TrtModelError;
+
+#[cfg(feature = "tensorrt-backend")]
+pub use backend_tensorrt::ModelYuNetRt;
 
 // OpenCV compatibility layer for ORT/TensorRT backends
 // Allows using ORT/TensorRT inference with OpenCV Mat input

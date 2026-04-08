@@ -47,7 +47,7 @@ impl From<TrtError> for TrtModelError {
 /// Loads a pre-built `.engine` file and runs inference on GPU.
 /// The engine must be built separately using `trtexec`.
 pub struct ModelUltralyticsRt {
-    // Drop order matters: gpu_buffers → context → stream → engine
+    // Drop order matters: gpu_buffers => context => stream => engine
     /// GPU buffers for each binding (freed before context/engine).
     gpu_buffers: Vec<CudaBuffer>,
     /// Execution context (destroyed before engine).
