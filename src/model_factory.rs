@@ -97,6 +97,49 @@ impl Model {
     }
 }
 
+// YuNet face detection via ORT (CPU)
+#[cfg(feature = "ort-backend")]
+impl Model {
+    /// Creates a new YuNet face detection model using ONNX Runtime (CPU).
+    ///
+    /// Input dimensions are read from the ONNX metadata automatically.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the YuNet ONNX model file
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::yunet_ort("face_detection_yunet_2023mar.onnx")?;
+    /// ```
+    pub fn yunet_ort(
+        model_path: &str,
+    ) -> Result<crate::backend_ort::ModelYuNetOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYuNetOrt::new_from_file(model_path)
+    }
+}
+
+// YuNet face detection via ORT + CUDA
+#[cfg(feature = "ort-cuda-backend")]
+impl Model {
+    /// Creates a new YuNet face detection model using ONNX Runtime with CUDA.
+    pub fn yunet_ort_cuda(
+        model_path: &str,
+    ) -> Result<crate::backend_ort::ModelYuNetOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYuNetOrt::new_from_file_cuda(model_path)
+    }
+}
+
+// YuNet face detection via ORT + TensorRT EP
+#[cfg(feature = "ort-tensorrt-backend")]
+impl Model {
+    /// Creates a new YuNet face detection model using ONNX Runtime with TensorRT.
+    pub fn yunet_ort_tensorrt(
+        model_path: &str,
+    ) -> Result<crate::backend_ort::ModelYuNetOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelYuNetOrt::new_from_file_tensorrt(model_path)
+    }
+}
+
 #[cfg(feature = "ort-cuda-backend")]
 impl Model {
     /// Creates a new Ultralytics YOLO model using ONNX Runtime with CUDA acceleration.
@@ -483,6 +526,21 @@ impl Model {
     ) -> Result<crate::backend_tensorrt::ModelUltralyticsRt, crate::backend_tensorrt::TrtModelError> {
         crate::backend_tensorrt::ModelUltralyticsRt::new_from_file(engine_path, class_filters)
     }
+
+    /// Creates a new YuNet face detection model using TensorRT.
+    ///
+    /// # Arguments
+    /// * `engine_path` - Path to the pre-built `.engine` file
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::yunet_tensorrt("face_detection_yunet.engine")?;
+    /// ```
+    pub fn yunet_tensorrt(
+        engine_path: &str,
+    ) -> Result<crate::backend_tensorrt::ModelYuNetRt, crate::backend_tensorrt::TrtModelError> {
+        crate::backend_tensorrt::ModelYuNetRt::new_from_file(engine_path)
+    }
 }
 
 // ============================================================================
@@ -532,5 +590,20 @@ impl Model {
             num_classes,
             class_filters,
         )
+    }
+
+    /// Creates a new YuNet face detection model using RKNN NPU.
+    ///
+    /// # Arguments
+    /// * `model_path` - Path to the `.rknn` model file
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::yunet_rknn("face_detection_yunet.rknn")?;
+    /// ```
+    pub fn yunet_rknn(
+        model_path: &str,
+    ) -> Result<crate::backend_rknn::ModelYuNetRknn, crate::backend_rknn::RknnModelError> {
+        crate::backend_rknn::ModelYuNetRknn::new_from_file(model_path)
     }
 }
