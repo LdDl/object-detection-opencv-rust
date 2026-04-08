@@ -643,10 +643,27 @@ The model is available for ORT, OpenCV, TensorRT, and RKNN backends. For ORT/Ten
 
 The OpenCV backend is a wrapper around OpenCV's built-in `FaceDetectorYN` (requires OpenCV 4.7+), which handles preprocessing, inference, decoding and NMS internally.
 
-Download the ONNX model from [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet):
+**Compatible weights** (same 12-tensor output format, no code changes needed):
+
+| Source | File | Input | Size |
+|--------|------|-------|------|
+| [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) | `face_detection_yunet_2023mar.onnx` | 640×640 | 228 KB |
+| [libfacedetection.train](https://github.com/ShiqiYu/libfacedetection.train/tree/master/onnx) | `yunet_n_640_640.onnx` | 640×640 | 311 KB |
+| [libfacedetection.train](https://github.com/ShiqiYu/libfacedetection.train/tree/master/onnx) | `yunet_n_320_320.onnx` | 320×320 | 311 KB |
+
+Download weights:
 ```bash
+# OpenCV Zoo (228 KB, 53K params)
 wget -O pretrained/face_detection_yunet_2023mar.onnx \
   https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
+
+# libfacedetection.train (311 KB, 74K params) - 640x640
+wget -O pretrained/yunet_n_640_640.onnx \
+  https://github.com/ShiqiYu/libfacedetection.train/raw/master/onnx/yunet_n_640_640.onnx
+
+# libfacedetection.train (311 KB, 74K params) - 320x320
+wget -O pretrained/yunet_n_320_320.onnx \
+  https://github.com/ShiqiYu/libfacedetection.train/raw/master/onnx/yunet_n_320_320.onnx
 ```
 
 For TensorRT, convert the ONNX model:
