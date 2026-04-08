@@ -385,6 +385,10 @@ required-features = ["opencv-backend"]
 name = "yunet_tensorrt"
 required-features = ["tensorrt-backend"]
 
+[[example]]
+name = "yunet_rknn"
+required-features = ["rknn-backend"]
+
 [dependencies]
 lazy_static = "1.5.0"
 ndarray = "0.17"

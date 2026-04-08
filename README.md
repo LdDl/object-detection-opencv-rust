@@ -232,6 +232,7 @@ cargo run --example yolo_v4_tiny_d2o_v8_opencv --release --no-default-features -
 cargo run --example yunet_ort --release
 cargo run --example yunet_opencv --release --no-default-features --features=opencv-backend
 cargo run --example yunet_tensorrt --release --no-default-features --features=tensorrt-backend
+cargo run --example yunet_rknn --release --no-default-features --features=rknn-backend
 ```
 
 > **Note:** Examples with `d2o` in the name use ONNX models converted from Darknet `.cfg` + `.weights` via [darknet2onnx]. The suffix `v8` or `v5` indicates the output format used during conversion (`--format yolov8` or `--format yolov5`).
@@ -672,6 +673,19 @@ trtexec --onnx=pretrained/face_detection_yunet_2023mar.onnx \
   --saveEngine=pretrained/face_detection_yunet_2023mar.engine --fp16
 ```
 
+For RKNN, convert via [rv1106-yunet](https://github.com/LdDl/rv1106-yunet):
+```bash
+# There is a script to download WIDER face dataset in that repo, but you can also use your own calibration images
+python onnx_to_rknn.py face_detection_yunet_2023mar.onnx --dataset calibration_images/
+```
+
+Cross-compile and deploy to device:
+```bash
+cross build --target armv7-unknown-linux-gnueabihf --release \
+    --example yunet_rknn --no-default-features --features rknn-backend
+scp target/armv7-unknown-linux-gnueabihf/release/examples/yunet_rknn user@device:~/
+```
+
 **Usage (ORT backend):**
 ```rust
 use od_opencv::{ImageBuffer, Model, FaceDetection};
@@ -726,7 +740,21 @@ let frame = opencv::imgcodecs::imread("image.jpg", 1)?;
 let detections = model.forward(&frame, 0.7, 0.3)?;
 ```
 
-See full examples: [examples/yunet_ort.rs](examples/yunet_ort.rs), [examples/yunet_opencv.rs](examples/yunet_opencv.rs), [examples/yunet_tensorrt.rs](examples/yunet_tensorrt.rs)
+**Usage (RKNN backend):**
+```rust
+use od_opencv::{ImageBuffer, Model};
+
+let mut model = Model::yunet_rknn("pretrained/face_detection_yunet_2023mar.rknn")
+    .expect("Failed to load RKNN model");
+
+let img = image::open("image.jpg").expect("Failed to load image");
+let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+let detections = model.forward(&img_buffer, 0.7, 0.3)
+    .expect("Inference failed");
+```
+
+See full examples: [examples/yunet_ort.rs](examples/yunet_ort.rs), [examples/yunet_opencv.rs](examples/yunet_opencv.rs), [examples/yunet_tensorrt.rs](examples/yunet_tensorrt.rs), [examples/yunet_rknn.rs](examples/yunet_rknn.rs)
 
 ## Features
 
