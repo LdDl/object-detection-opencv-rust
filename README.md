@@ -6,6 +6,8 @@
 
 This crate provides structures and methods for solving object detection tasks using YOLO models. It supports multiple inference backends:
 
+Also this crate provides face detection via YuNet model.
+
 - **ORT backend** (default): Pure Rust, no OpenCV required, uses ONNX Runtime
 - **OpenCV backend**: Uses [OpenCV's DNN module](https://docs.opencv.org/4.8.0/d2/d58/tutorial_table_of_content_dnn.html), supports Darknet format
 - **TensorRT backend**: Direct TensorRT inference via [tensorrt-infer](https://crates.io/crates/tensorrt-infer), for NVIDIA GPUs and Jetson devices
@@ -24,6 +26,8 @@ This crate provides structures and methods for solving object detection tasks us
 | YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
+| **Face Detection** | | | | |
+| YuNet (OpenCV Zoo) | :white_check_mark: (uses `Model::yunet_ort()`) | :x: | :x: | :white_check_mark: (uses `Model::yunet_tensorrt()`) |
 
 **Note on YOLOv3/v4/v7 ONNX:** Darknet `.cfg` + `.weights` can be converted to ONNX using [darknet2onnx](https://github.com/LdDl/darknet2onnx). Use `--format yolov8` to get `[1, 84, N]` output compatible with `Model::ort()` / `Model::opencv()` / `Model::tensorrt()` or `--format yolov5` for `[1, N, 85]` compatible with `Model::yolov5_ort()` / `Model::yolov5_opencv()`. E.g. using `yolov8` format:
 ```bash
@@ -52,6 +56,7 @@ Also be aware: I've tested only `yolov8` format for TensorRT.
   - [OpenCV Backend](#opencv-backend)
   - [TensorRT Backend](#tensorrt-backend)
   - [RKNN Backend](#rknn-backend)
+  - [Face Detection (YuNet)](#face-detection-yunet)
 - [Features](#features)
 - [Migration from 0.3.x](#migration-from-03x)
 - [References](#references)
@@ -105,10 +110,10 @@ This crate supports multiple inference backends:
 
 | Backend | Default | OpenCV Required | GPU Support | Models Supported |
 |---------|---------|-----------------|-------------|------------------|
-| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX) |
+| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX), YuNet face detection |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions |
-| `tensorrt-backend` | No | No | NVIDIA GPU (TensorRT) | YOLOv8/v9/v11 (.engine) |
-| `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11 (.rknn) |
+| `tensorrt-backend` | No | No | NVIDIA GPU (TensorRT) | YOLOv8/v9/v11 (.engine), YuNet face detection |
+| `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11 (.rknn), YuNet face detection |
 
 **Warning: CUDA Conflict**
 
@@ -222,6 +227,10 @@ cargo run --example yolo_v8_n --release --no-default-features --features=opencv-
 # Darknet-to-ONNX examples (names contain "d2o") - converted via darknet2onnx
 cargo run --example yolo_v4_tiny_d2o_v8_ort --release
 cargo run --example yolo_v4_tiny_d2o_v8_opencv --release --no-default-features --features=opencv-backend
+
+# Face detection (YuNet)
+cargo run --example yunet_ort --release
+cargo run --example yunet_tensorrt --release --no-default-features --features=tensorrt-backend
 ```
 
 > **Note:** Examples with `d2o` in the name use ONNX models converted from Darknet `.cfg` + `.weights` via [darknet2onnx]. The suffix `v8` or `v5` indicates the output format used during conversion (`--format yolov8` or `--format yolov5`).
@@ -625,6 +634,65 @@ The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https:/
     scp target/armv7-unknown-linux-gnueabihf/release/examples/yolo_v8_n_rknn user@device:~/
     ```
 
+### Face Detection (YuNet)
+
+This crate supports face detection using [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) from OpenCV Zoo. YuNet is an extremely lightweight model (0.083M params, 228KB ONNX) that detects faces and returns 5 facial landmarks (eyes, nose, mouth corners).
+
+The model is available for ORT, TensorRT, and RKNN backends. Input dimensions are read from the model automatically.
+
+Download the ONNX model from [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet):
+```bash
+wget -O pretrained/face_detection_yunet_2023mar.onnx \
+  https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
+```
+
+For TensorRT, convert the ONNX model:
+```bash
+trtexec --onnx=pretrained/face_detection_yunet_2023mar.onnx \
+  --saveEngine=pretrained/face_detection_yunet_2023mar.engine --fp16
+```
+
+**Usage (ORT backend):**
+```rust
+use od_opencv::{ImageBuffer, Model, FaceDetection};
+
+ort::init().commit();
+
+let mut model = Model::yunet_ort("pretrained/face_detection_yunet_2023mar.onnx")
+    .expect("Failed to load YuNet model");
+
+let img = image::open("image.jpg").expect("Failed to load image");
+let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+let detections = model.forward(&img_buffer, 0.7, 0.3)
+    .expect("Inference failed");
+
+for det in &detections {
+    println!("Face: confidence={:.3}, bbox=({:.1},{:.1},{:.1},{:.1})",
+        det.confidence, det.x, det.y, det.width, det.height);
+    let names = ["right_eye", "left_eye", "nose", "right_mouth", "left_mouth"];
+    for (j, name) in names.iter().enumerate() {
+        println!("  {}: ({:.1}, {:.1})", name, det.landmarks[j][0], det.landmarks[j][1]);
+    }
+}
+```
+
+**Usage (TensorRT backend):**
+```rust
+use od_opencv::{ImageBuffer, Model};
+
+let mut model = Model::yunet_tensorrt("pretrained/face_detection_yunet_2023mar.engine")
+    .expect("Failed to load engine");
+
+let img = image::open("image.jpg").expect("Failed to load image");
+let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+let detections = model.forward(&img_buffer, 0.7, 0.3)
+    .expect("Inference failed");
+```
+
+See full examples: [examples/yunet_ort.rs](examples/yunet_ort.rs), [examples/yunet_tensorrt.rs](examples/yunet_tensorrt.rs)
+
 ## Features
 
 ### Letterbox Preprocessing
@@ -672,6 +740,9 @@ Your existing code using `ModelUltralyticsV8`, `ModelYOLOClassic`, etc. will con
 * YOLO v7 paper - https://arxiv.org/abs/2207.02696, Chien-Yao Wang, Alexey Bochkovskiy, Hong-Yuan Mark Liao
 * YOLO v9 paper - https://arxiv.org/abs/2402.13616, Chien-Yao Wang, I-Hau Yeh, Hong-Yuan Mark Liao
 * YOLO v10 paper - https://arxiv.org/abs/2405.14458, Ao Wang, Hui Chen, Lihao Liu, Kai Chen, Zijia Lin, Jungong Han, Guiguang Ding
+* YuNet face detection paper - https://link.springer.com/article/10.1007/s11633-023-1423-y, Shiqi Yu, Yuanbo Xia, et al.
+* YuNet training repository (libfacedetection) - https://github.com/ShiqiYu/libfacedetection.train
+* YuNet pretrained weights (OpenCV Zoo) - https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet
 * Original Darknet YOLO repository - https://github.com/pjreddie/darknet
 * Most popular fork of Darknet YOLO - https://github.com/AlexeyAB/darknet
 * Developers of YOLOv8/v11 - https://github.com/ultralytics/ultralytics

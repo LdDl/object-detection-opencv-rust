@@ -6,7 +6,7 @@
 
 use std::os::raw::c_void;
 
-use tensorrt_infer::{TrtEngine, TrtContext, CudaBuffer, CudaStream, BindingInfo, TrtError};
+use tensorrt_infer::{TrtEngine, TrtContext, CudaBuffer, CudaStream, BindingInfo};
 
 use crate::face_detection::{FaceDetection, FaceDetector, STRIDES, decode_yunet_stride, nms_faces};
 use crate::image_buffer::ImageBuffer;
