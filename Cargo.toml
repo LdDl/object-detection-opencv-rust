@@ -352,7 +352,7 @@ required-features = ["opencv-backend"]
 name = "yolo_v7_tiny_d2o_v8_opencv"
 required-features = ["opencv-backend"]
 
-# Darknet2ONNX examples (tensorrt-backend, --format yolov8 → trtexec)
+# Darknet2ONNX examples (tensorrt-backend, --format yolov8 => trtexec)
 [[example]]
 name = "yolo_v4_tiny_d2o_v8_tensorrt"
 required-features = ["tensorrt-backend"]
@@ -371,6 +371,11 @@ required-features = ["tensorrt-opencv-compat"]
 [[example]]
 name = "yolo_v11_n_tensorrt"
 required-features = ["tensorrt-backend"]
+
+# YuNet face detection examples
+[[example]]
+name = "yunet_ort"
+required-features = ["ort-backend"]
 
 [dependencies]
 lazy_static = "1.5.0"
