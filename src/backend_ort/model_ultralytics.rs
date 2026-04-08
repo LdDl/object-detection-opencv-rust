@@ -312,7 +312,7 @@ mod opencv_compat_impl {
         ///
         /// This is the optimized path that:
         /// 1. Uses OpenCV for resize (works with BGR natively)
-        /// 2. Converts BGR→RGB fused with normalization
+        /// 2. Converts BGR=>RGB fused with normalization
         /// 3. Runs ORT inference
         ///
         /// # Arguments
@@ -328,7 +328,7 @@ mod opencv_compat_impl {
             conf_threshold: f32,
             nms_threshold: f32,
         ) -> Result<(Vec<Rect>, Vec<usize>, Vec<f32>), OpenCvError> {
-            // Use optimized preprocessing: OpenCV resize + fused BGR→RGB conversion
+            // Use optimized preprocessing: OpenCV resize + fused BGR=>RGB conversion
             let (tensor, meta) = crate::opencv_compat::preprocess_mat(
                 image,
                 self.input_width,
