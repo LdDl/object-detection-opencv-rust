@@ -1,6 +1,6 @@
 //! YOLOv5 model using OpenCV DNN.
 //!
-//! YOLOv5 differs from YOLOv8/v9/v11 in output format:
+//! YOLOv5 differs from YOLOv8/v9/v11/v26 in output format:
 //! - Output shape: `[1, num_predictions, 85]` (for COCO) vs `[1, 84, num_predictions]`
 //! - Has objectness score at index 4
 //! - Class scores at indices 5-84

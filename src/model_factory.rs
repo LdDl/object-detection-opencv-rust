@@ -34,7 +34,7 @@ pub struct Model;
 
 #[cfg(feature = "ort-backend")]
 impl Model {
-    /// Creates a new Ultralytics YOLO model (v8/v9/v11) using ONNX Runtime (CPU).
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11/v26) using ONNX Runtime (CPU).
     ///
     /// # Arguments
     /// * `model_path` - Path to the ONNX model file
@@ -99,7 +99,7 @@ impl Model {
 
 #[cfg(feature = "ort-cuda-backend")]
 impl Model {
-    /// Creates a new Ultralytics YOLO model using ONNX Runtime with CUDA acceleration.
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11/v26) using ONNX Runtime with CUDA acceleration.
     ///
     /// # Arguments
     /// * `model_path` - Path to the ONNX model file
@@ -154,7 +154,7 @@ impl Model {
 
 #[cfg(feature = "ort-tensorrt-backend")]
 impl Model {
-    /// Creates a new Ultralytics YOLO model using ONNX Runtime with TensorRT acceleration.
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11/v26) using ONNX Runtime with TensorRT acceleration.
     ///
     /// # Arguments
     /// * `model_path` - Path to the ONNX model file
@@ -213,7 +213,7 @@ impl Model {
 
 #[cfg(feature = "opencv-backend")]
 impl Model {
-    /// Creates a new Ultralytics YOLO model (v8/v9/v11) using OpenCV DNN.
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11/v26) using OpenCV DNN.
     ///
     /// # Arguments
     /// * `model_path` - Path to the ONNX model file
@@ -453,7 +453,7 @@ impl Model {
 
 #[cfg(feature = "tensorrt-backend")]
 impl Model {
-    /// Creates a new Ultralytics YOLO model (v8/v9/v11) using TensorRT.
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11/v26) using TensorRT.
     ///
     /// Loads a pre-built `.engine` file. The engine must be built separately
     /// using `trtexec` for the target GPU. Input dimensions are read directly
@@ -491,7 +491,7 @@ impl Model {
 
 #[cfg(feature = "rknn-backend")]
 impl Model {
-    /// Creates a new Ultralytics YOLO model (v8/v9/v11) using RKNN NPU.
+    /// Creates a new Ultralytics YOLO model (v8/v9/v11/v26) using RKNN NPU.
     ///
     /// Input size is read from the model automatically.
     ///

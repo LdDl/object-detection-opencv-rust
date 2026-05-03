@@ -42,7 +42,7 @@ impl From<TrtError> for TrtModelError {
     }
 }
 
-/// Ultralytics YOLO model (v8, v9, v11) using TensorRT.
+/// Ultralytics YOLO model (v8, v9, v11, v26) using TensorRT.
 ///
 /// Loads a pre-built `.engine` file and runs inference on GPU.
 /// The engine must be built separately using `trtexec`.

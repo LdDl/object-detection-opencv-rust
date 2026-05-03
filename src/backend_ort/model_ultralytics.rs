@@ -1,4 +1,4 @@
-//! Ultralytics YOLO models (v8, v9, v11) using ONNX Runtime.
+//! Ultralytics YOLO models (v8, v9, v11, v26) using ONNX Runtime.
 
 use ort::session::{Session, builder::GraphOptimizationLevel};
 use ort::inputs;
@@ -44,9 +44,11 @@ impl<T> From<ort::Error<T>> for OrtModelError {
     }
 }
 
-/// Ultralytics YOLO model (v8, v9, v11) using ONNX Runtime.
+/// Ultralytics YOLO model (v8, v9, v11, v26) using ONNX Runtime.
 ///
-/// This model supports YOLOv8, v9, and v11 which share the same output format.
+/// This model supports YOLOv8, v9, v11, and v26 which share the same output format.
+/// For YOLOv26, export with `end2end=False` to use the one-to-many head
+/// (output shape `[1, nc+4, 8400]`) compatible with this crate.
 pub struct ModelUltralyticsOrt {
     session: Session,
     input_width: u32,
@@ -222,7 +224,7 @@ impl ModelUltralyticsOrt {
         let class_filters = self.class_filters.clone();
 
         // Parse output based on shape
-        // YOLOv8/v9/v11 output shape: [1, 84, num_predictions] or [1, num_classes+4, num_predictions]
+        // YOLOv8/v9/v11/v26 output shape: [1, 84, num_predictions] or [1, num_classes+4, num_predictions]
         let detections = Self::parse_output_array_static(&output.view(), conf_threshold, &meta)?;
 
         // Apply class filter

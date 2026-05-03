@@ -24,6 +24,7 @@ This crate provides structures and methods for solving object detection tasks us
 | YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
+| YOLO v26 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 
 **Note on YOLOv3/v4/v7 ONNX:** Darknet `.cfg` + `.weights` can be converted to ONNX using [darknet2onnx](https://github.com/LdDl/darknet2onnx). Use `--format yolov8` to get `[1, 84, N]` output compatible with `Model::ort()` / `Model::opencv()` / `Model::tensorrt()` or `--format yolov5` for `[1, N, 85]` compatible with `Model::yolov5_ort()` / `Model::yolov5_opencv()`. E.g. using `yolov8` format:
 ```bash
@@ -38,7 +39,15 @@ Also be aware: I've tested only `yolov8` format for TensorRT.
 
 [darknet2onnx]: https://github.com/LdDl/darknet2onnx
 
-**Note on YOLOv9/v11:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. For opencv-backend it is required to use OpenCV v4.11+ for best compatibility.
+**Note on YOLOv9/v11/v26:** These models use the same output format as YOLOv8 (`[1, 84, 8400]`), so `ModelUltralyticsV8` works directly. For opencv-backend it is required to use OpenCV v4.11+ for best compatibility.
+
+**Note on YOLOv26:** YOLOv26 has a dual-head architecture. The default one-to-one head outputs `(N, 300, 6)` (NMS-free, end-to-end) which is **not** compatible with this crate. To use YOLOv26, export with the one-to-many head by setting `end2end=False`:
+```python
+from ultralytics import YOLO
+model = YOLO("yolo26n.pt")
+model.export(format="onnx", end2end=False, imgsz=640)
+```
+This produces the standard `[1, nc+4, 8400]` output that works with all backends.
 
 **Note on YOLOv10:** YOLOv10's NMS-free architecture uses TopK layer which OpenCV DNN doesn't support. Use YOLOv8/v9/v11 instead, or export YOLOv10 with [patched ultralytics](https://gist.github.com/DarthSim/216551dfd58e5628290e90c1d358704b) that removes built-in NMS. For ORT backend I've not tested YOLOv10 yet.
 
@@ -86,14 +95,14 @@ Download scripts:
 _- Why YOLOv10 doesn't work with OpenCV?_
 
 YOLOv10 introduced an "NMS-free" architecture where post-processing (TopK selection) is built into the model itself. Unfortunately, OpenCV's DNN module doesn't support the TopK ONNX operator, causing broken inference results. You have two options:
-1. Use YOLOv8/v9/v11 instead (recommended) - they work out of the box
+1. Use YOLOv8/v9/v11/v26 instead (recommended) - they work out of the box
 2. Export YOLOv10 with [patched ultralytics](https://gist.github.com/DarthSim/216551dfd58e5628290e90c1d358704b) that removes built-in NMS, then use `ModelUltralyticsV8` with manual NMS
 
 _- What OpenCV's version is tested for `opencv-backend`?_
 
 I've tested it with v4.11.0 - v4.12.0. Rust bindings version: v0.96.0
 
-For YOLOv9/v11 support, OpenCV 4.11+ is recommended.
+For YOLOv9/v11/v26 support, OpenCV 4.11+ is recommended.
 
 _- Are wrapper structures thread safe?_
 
@@ -105,10 +114,10 @@ This crate supports multiple inference backends:
 
 | Backend | Default | OpenCV Required | GPU Support | Models Supported |
 |---------|---------|-----------------|-------------|------------------|
-| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX) |
+| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11/v26 (ONNX) |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions |
-| `tensorrt-backend` | No | No | NVIDIA GPU (TensorRT) | YOLOv8/v9/v11 (.engine) |
-| `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11 (.rknn) |
+| `tensorrt-backend` | No | No | NVIDIA GPU (TensorRT) | YOLOv8/v9/v11/v26 (.engine) |
+| `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11/v26 (.rknn) |
 
 **Warning: CUDA Conflict**
 
@@ -201,8 +210,13 @@ For non-standard CUDA/TensorRT installation paths, set environment variables `CU
     * YOLO v11 medium (m) - [download_v11_m.sh](scripts/download_v11_m.sh).
     * YOLO v11 large (l) - [download_v11_l.sh](scripts/download_v11_l.sh).
     * YOLO v11 extra (x) - [download_v11_x.sh](scripts/download_v11_x.sh).
+    * YOLO v26 nano (n) - [download_v26_n.sh](scripts/download_v26_n.sh).
+    * YOLO v26 small (s) - [download_v26_s.sh](scripts/download_v26_s.sh).
+    * YOLO v26 medium (m) - [download_v26_m.sh](scripts/download_v26_m.sh).
+    * YOLO v26 large (l) - [download_v26_l.sh](scripts/download_v26_l.sh).
+    * YOLO v26 extra (x) - [download_v26_x.sh](scripts/download_v26_x.sh).
 
-    __Notice that "v5/v5u/v8/v9/v11" scripts download Pytorch-based weights and convert them into ONNX via `ultralytics` package for Python.__
+    __Notice that "v5/v5u/v8/v9/v11/v26" scripts download Pytorch-based weights and convert them into ONNX via `ultralytics` package for Python.__
     
 ## Usage
 
@@ -230,7 +244,7 @@ cargo run --example yolo_v4_tiny_d2o_v8_opencv --release --no-default-features -
 
 ### ORT Backend (Default)
 
-The ORT backend uses ONNX Runtime and doesn't require OpenCV. This is the recommended approach for YOLOv8/v9/v11 models.
+The ORT backend uses ONNX Runtime and doesn't require OpenCV. This is the recommended approach for YOLOv8/v9/v11/v26 models.
 
 1. Add this crate to your's `Cargo.toml`:
     ```shell
@@ -629,7 +643,7 @@ The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https:/
 
 ### Letterbox Preprocessing
 
-For non-traditional YOLO models (v8/v9/v11), you can enable letterbox preprocessing which maintains aspect ratio during resize and pads with gray borders. This matches the preprocessing used during Ultralytics training.
+For non-traditional YOLO models (v8/v9/v11/v26), you can enable letterbox preprocessing which maintains aspect ratio during resize and pads with gray borders. This matches the preprocessing used during Ultralytics training.
 
 This works for ORT, OpenCV, and TensorRT backends.
 
@@ -674,7 +688,8 @@ Your existing code using `ModelUltralyticsV8`, `ModelYOLOClassic`, etc. will con
 * YOLO v10 paper - https://arxiv.org/abs/2405.14458, Ao Wang, Hui Chen, Lihao Liu, Kai Chen, Zijia Lin, Jungong Han, Guiguang Ding
 * Original Darknet YOLO repository - https://github.com/pjreddie/darknet
 * Most popular fork of Darknet YOLO - https://github.com/AlexeyAB/darknet
-* Developers of YOLOv8/v11 - https://github.com/ultralytics/ultralytics
+* Developers of YOLOv8/v11/v26 - https://github.com/ultralytics/ultralytics
+* YOLO v26 docs - https://docs.ultralytics.com/models/yolo26/
 * ONNX Runtime - https://onnxruntime.ai/
 
 * Darknet to ONNX converter (Go CLI) - https://github.com/LdDl/darknet2onnx

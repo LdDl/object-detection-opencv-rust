@@ -372,6 +372,23 @@ required-features = ["tensorrt-opencv-compat"]
 name = "yolo_v11_n_tensorrt"
 required-features = ["tensorrt-backend"]
 
+# YOLOv26 examples
+[[example]]
+name = "yolo_v26_n"
+required-features = ["opencv-backend"]
+
+[[example]]
+name = "yolo_v26_n_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "yolo_v26_n_ort_cuda"
+required-features = ["ort-cuda-backend"]
+
+[[example]]
+name = "yolo_v26_n_tensorrt"
+required-features = ["tensorrt-backend"]
+
 [dependencies]
 lazy_static = "1.5.0"
 ndarray = "0.17"
