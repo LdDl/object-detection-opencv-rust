@@ -1,7 +1,7 @@
 //! OpenCV DNN backend for YOLO models.
 //!
 //! This module provides wrappers for running YOLO models using OpenCV's DNN module.
-//! Supports YOLOv3, v4, v5, v7 (Darknet), and YOLOv8, v9, v11 (Ultralytics).
+//! Supports YOLOv3, v4, v5, v7 (Darknet), and YOLOv8, v9, v11, v26 (Ultralytics).
 
 pub mod model_format;
 pub mod utils;

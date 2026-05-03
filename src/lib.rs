@@ -11,7 +11,7 @@
 //!
 //! - Traditional YOLO (v3, v4, v7) - Darknet format, opencv-backend only
 //! - YOLOv5 - ONNX format, both backends
-//! - Ultralytics YOLO (v8, v9, v11) - ONNX format, both backends
+//! - Ultralytics YOLO (v8, v9, v11, v26) - ONNX format, both backends
 
 // Common types (always available)
 pub mod bbox;

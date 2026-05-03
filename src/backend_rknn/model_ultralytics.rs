@@ -1,4 +1,4 @@
-//! Ultralytics YOLO models (v8, v9, v11) using RKNN NPU.
+//! Ultralytics YOLO models (v8, v9, v11, v26) using RKNN NPU.
 //!
 //! Warning!!!: Aggressively optimized for embedded ARM for SPECIFIC setup: Cortex-A7 / RV1106:
 //! - Pre-allocated resize buffer (zero allocation per frame)
@@ -41,7 +41,7 @@ impl From<rknn_runtime::Error> for RknnModelError {
     }
 }
 
-/// Ultralytics YOLO model (v8, v9, v11) using RKNN NPU.
+/// Ultralytics YOLO model (v8, v9, v11, v26) using RKNN NPU.
 ///
 /// Expects models converted with `onnx_to_rknn.py` which:
 /// - Normalizes bbox coordinates to 0-1

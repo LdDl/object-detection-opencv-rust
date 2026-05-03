@@ -37,7 +37,7 @@ use super::utils::{
 
 const YOLO_BLOB_MEAN: (f64, f64, f64, f64) = (0.0, 0.0, 0.0, 0.0);
 
-/// Wrapper around YOLOv8
+/// Wrapper around YOLOv8 / YOLOv9 / YOLOv11 / YOLOv26
 /// See the ref. https://github.com/ultralytics/ultralytics
 pub struct ModelUltralyticsV8 {
     // Underlying OpenCV's DNN Net implementation
