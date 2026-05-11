@@ -131,6 +131,7 @@ fn iou_face(a: &FaceDetection, b: &FaceDetection) -> f32 {
 
 #[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 #[inline]
+#[allow(dead_code)]
 fn sigmoid(x: f32) -> f32 {
     1.0 / (1.0 + (-x).exp())
 }
@@ -171,19 +172,21 @@ pub fn decode_yunet_stride(
         let col = idx % feat_w;
         let row = idx / feat_w;
 
-        let anchor_cx = (col as f32 + 0.5) * s;
-        let anchor_cy = (row as f32 + 0.5) * s;
+        // Anchor at grid cell corner (matching OpenCV FaceDetectorYN decode)
+        let anchor_x = col as f32;
+        let anchor_y = row as f32;
 
-        let cls_score = sigmoid(cls[idx]);
-        let obj_score = sigmoid(obj[idx]).clamp(0.0, 1.0);
+        // Score: clamp to [0, 1] without sigmoid (OpenCV convention)
+        let cls_score = cls[idx].clamp(0.0, 1.0);
+        let obj_score = obj[idx].clamp(0.0, 1.0);
         let score = (cls_score * obj_score).sqrt();
 
         if score < conf_threshold {
             continue;
         }
 
-        let cx = anchor_cx + bbox[idx * 4] * s;
-        let cy = anchor_cy + bbox[idx * 4 + 1] * s;
+        let cx = (anchor_x + bbox[idx * 4]) * s;
+        let cy = (anchor_y + bbox[idx * 4 + 1]) * s;
         let w = bbox[idx * 4 + 2].exp() * s;
         let h = bbox[idx * 4 + 3].exp() * s;
 
@@ -193,8 +196,8 @@ pub fn decode_yunet_stride(
 
         let mut landmarks = [[0.0f32; 2]; 5];
         for k in 0..5 {
-            let lx = anchor_cx + kps[idx * 10 + 2 * k] * s;
-            let ly = anchor_cy + kps[idx * 10 + 2 * k + 1] * s;
+            let lx = (kps[idx * 10 + 2 * k] + anchor_x) * s;
+            let ly = (kps[idx * 10 + 2 * k + 1] + anchor_y) * s;
             let (ox, oy, _, _) = meta.inverse_transform(lx, ly, 0.0, 0.0);
             landmarks[k][0] = ox;
             landmarks[k][1] = oy;
