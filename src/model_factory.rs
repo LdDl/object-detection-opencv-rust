@@ -118,6 +118,146 @@ impl Model {
     }
 }
 
+// ArcFace face recognition via ORT (CPU)
+#[cfg(feature = "ort-backend")]
+impl Model {
+    /// Creates a new ArcFace model using ONNX Runtime (CPU).
+    ///
+    /// Uses `MobileFaceNet` normalization ([-1, 1]) by default.
+    /// For ResNet50 models, use [`arcface_ort_with_norm`].
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut model = Model::arcface_ort("w600k_mbf.onnx")?;
+    /// ```
+    pub fn arcface_ort(
+        model_path: &str,
+    ) -> Result<crate::backend_ort::ModelArcFaceOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelArcFaceOrt::new_from_file(model_path)
+    }
+
+    /// Creates a new ArcFace model using ONNX Runtime (CPU) with explicit normalization.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use od_opencv::ArcFaceNorm;
+    /// let mut model = Model::arcface_ort_with_norm("w600k_r50.onnx", ArcFaceNorm::ResNet)?;
+    /// ```
+    pub fn arcface_ort_with_norm(
+        model_path: &str,
+        norm: crate::backend_ort::ArcFaceNorm,
+    ) -> Result<crate::backend_ort::ModelArcFaceOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelArcFaceOrt::new_from_file_with_norm(model_path, norm)
+    }
+
+    /// Creates a face pipeline using ONNX Runtime (CPU).
+    ///
+    /// Uses `MobileFaceNet` normalization by default.
+    ///
+    /// # Example
+    /// ```ignore
+    /// let mut pipeline = Model::face_pipeline(
+    ///     "face_detection_yunet_2023mar.onnx",
+    ///     "w600k_mbf.onnx",
+    /// )?;
+    /// ```
+    pub fn face_pipeline(
+        detector_path: &str,
+        recognizer_path: &str,
+    ) -> Result<crate::face_pipeline::FacePipeline, crate::backend_ort::OrtModelError> {
+        crate::face_pipeline::FacePipeline::new(detector_path, recognizer_path)
+    }
+
+    /// Creates a face pipeline using ONNX Runtime (CPU) with explicit normalization.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use od_opencv::ArcFaceNorm;
+    /// let mut pipeline = Model::face_pipeline_with_norm(
+    ///     "yunet.onnx", "w600k_r50.onnx", ArcFaceNorm::ResNet,
+    /// )?;
+    /// ```
+    pub fn face_pipeline_with_norm(
+        detector_path: &str,
+        recognizer_path: &str,
+        norm: crate::backend_ort::ArcFaceNorm,
+    ) -> Result<crate::face_pipeline::FacePipeline, crate::backend_ort::OrtModelError> {
+        crate::face_pipeline::FacePipeline::new_with_norm(detector_path, recognizer_path, norm)
+    }
+}
+
+// ArcFace face recognition via ORT + CUDA
+#[cfg(feature = "ort-cuda-backend")]
+impl Model {
+    /// Creates a new ArcFace model using ONNX Runtime with CUDA.
+    pub fn arcface_ort_cuda(
+        model_path: &str,
+    ) -> Result<crate::backend_ort::ModelArcFaceOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelArcFaceOrt::new_from_file_cuda(model_path)
+    }
+
+    /// Creates a new ArcFace model using ONNX Runtime with CUDA and explicit normalization.
+    pub fn arcface_ort_cuda_with_norm(
+        model_path: &str,
+        norm: crate::backend_ort::ArcFaceNorm,
+    ) -> Result<crate::backend_ort::ModelArcFaceOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelArcFaceOrt::new_from_file_cuda_with_norm(model_path, norm)
+    }
+
+    /// Creates a face pipeline using ONNX Runtime with CUDA.
+    pub fn face_pipeline_cuda(
+        detector_path: &str,
+        recognizer_path: &str,
+    ) -> Result<crate::face_pipeline::FacePipeline, crate::backend_ort::OrtModelError> {
+        crate::face_pipeline::FacePipeline::new_cuda(detector_path, recognizer_path)
+    }
+
+    /// Creates a face pipeline using ONNX Runtime with CUDA and explicit normalization.
+    pub fn face_pipeline_cuda_with_norm(
+        detector_path: &str,
+        recognizer_path: &str,
+        norm: crate::backend_ort::ArcFaceNorm,
+    ) -> Result<crate::face_pipeline::FacePipeline, crate::backend_ort::OrtModelError> {
+        crate::face_pipeline::FacePipeline::new_cuda_with_norm(detector_path, recognizer_path, norm)
+    }
+}
+
+// ArcFace face recognition via ORT + TensorRT EP
+#[cfg(feature = "ort-tensorrt-backend")]
+impl Model {
+    /// Creates a new ArcFace model using ONNX Runtime with TensorRT.
+    pub fn arcface_ort_tensorrt(
+        model_path: &str,
+    ) -> Result<crate::backend_ort::ModelArcFaceOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelArcFaceOrt::new_from_file_tensorrt(model_path)
+    }
+
+    /// Creates a new ArcFace model using ONNX Runtime with TensorRT and explicit normalization.
+    pub fn arcface_ort_tensorrt_with_norm(
+        model_path: &str,
+        norm: crate::backend_ort::ArcFaceNorm,
+    ) -> Result<crate::backend_ort::ModelArcFaceOrt, crate::backend_ort::OrtModelError> {
+        crate::backend_ort::ModelArcFaceOrt::new_from_file_tensorrt_with_norm(model_path, norm)
+    }
+
+    /// Creates a face pipeline using ONNX Runtime with TensorRT.
+    pub fn face_pipeline_tensorrt(
+        detector_path: &str,
+        recognizer_path: &str,
+    ) -> Result<crate::face_pipeline::FacePipeline, crate::backend_ort::OrtModelError> {
+        crate::face_pipeline::FacePipeline::new_tensorrt(detector_path, recognizer_path)
+    }
+
+    /// Creates a face pipeline using ONNX Runtime with TensorRT and explicit normalization.
+    pub fn face_pipeline_tensorrt_with_norm(
+        detector_path: &str,
+        recognizer_path: &str,
+        norm: crate::backend_ort::ArcFaceNorm,
+    ) -> Result<crate::face_pipeline::FacePipeline, crate::backend_ort::OrtModelError> {
+        crate::face_pipeline::FacePipeline::new_tensorrt_with_norm(detector_path, recognizer_path, norm)
+    }
+}
+
 // YuNet face detection via ORT + CUDA
 #[cfg(feature = "ort-cuda-backend")]
 impl Model {

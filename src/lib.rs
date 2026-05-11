@@ -38,6 +38,14 @@ pub mod face_detection;
 #[cfg(any(feature = "opencv-backend", feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
 pub use face_detection::{FaceDetection, FaceDetector};
 
+// Face alignment (affine warp by 5 landmarks)
+#[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]
+pub mod face_alignment;
+
+// Face pipeline (detect + align + embed)
+#[cfg(feature = "ort-backend")]
+pub mod face_pipeline;
+
 // OpenCV DNN backend - requires opencv/dnn feature
 #[cfg(feature = "opencv-backend")]
 pub mod backend_opencv;
@@ -98,6 +106,15 @@ pub use backend_ort::OrtModelError;
 
 #[cfg(feature = "ort-backend")]
 pub use backend_ort::ModelYuNetOrt;
+
+#[cfg(feature = "ort-backend")]
+pub use backend_ort::ModelArcFaceOrt;
+
+#[cfg(feature = "ort-backend")]
+pub use backend_ort::ArcFaceNorm;
+
+#[cfg(feature = "ort-backend")]
+pub use face_pipeline::{FacePipeline, FaceResult, cosine_similarity};
 
 // Re-exports for rknn-backend
 #[cfg(feature = "rknn-backend")]
