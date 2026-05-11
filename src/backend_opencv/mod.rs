@@ -9,6 +9,7 @@ pub mod model;
 pub mod model_classic;
 pub mod model_ultralytics;
 pub mod model_yolov5;
+pub mod model_yunet;
 
 // Re-exports for convenience
 pub use model_format::{ModelFormat, ModelVersion};
@@ -16,3 +17,4 @@ pub use model::ModelTrait;
 pub use model_classic::ModelYOLOClassic;
 pub use model_ultralytics::ModelUltralyticsV8;
 pub use model_yolov5::ModelYOLOv5OpenCV;
+pub use model_yunet::ModelYuNetOpenCV;

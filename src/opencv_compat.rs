@@ -8,7 +8,7 @@
 //!
 //! - Zero-copy Mat to ArrayView3 conversion (when Mat is continuous)
 //! - OpenCV-based resize functions that work with BGR images
-//! - Fused BGR→RGB + normalization for optimal performance
+//! - Fused BGR=>RGB + normalization for optimal performance
 //! - `ModelTrait` for ORT/TensorRT models that accept OpenCV Mat input
 
 use ndarray::{Array3, Array4, ArrayView3};
@@ -254,7 +254,7 @@ pub fn resize_mat_letterbox(
 ///
 /// This is the optimized path that:
 /// 1. Uses OpenCV for resize (works with BGR natively)
-/// 2. Converts BGR→RGB fused with normalization in one pass
+/// 2. Converts BGR=>RGB fused with normalization in one pass
 ///
 /// # Arguments
 /// * `mat` - Input BGR Mat
@@ -281,7 +281,7 @@ pub fn preprocess_mat(
     // Zero-copy view of resized Mat
     let bgr_view = mat_to_array_view(&resized)?;
 
-    // Fused BGR→RGB + normalize in one pass
+    // Fused BGR=>RGB + normalize in one pass
     let tensor = crate::preprocessing::bgr_hwc_to_rgb_nchw_tensor(&bgr_view);
 
     Ok((tensor, meta))

@@ -186,7 +186,7 @@ mod image_preprocessing {
 
     /// Converts a BGR HWC u8 array to RGB NCHW f32 tensor in one pass.
     ///
-    /// This fuses the BGR→RGB conversion with normalization, saving one full
+    /// This fuses the BGR=>RGB conversion with normalization, saving one full
     /// image copy compared to separate operations.
     ///
     /// # Arguments
@@ -206,7 +206,7 @@ mod image_preprocessing {
                 for w in 0..width {
                     let src_idx = (row_offset + w) * 3;
                     let dst_base = row_offset + w;
-                    // BGR → RGB swap fused with normalization
+                    // BGR => RGB swap fused with normalization
                     dst[dst_base] = src[src_idx + 2] as f32 * inv_255;          // R
                     dst[hw + dst_base] = src[src_idx + 1] as f32 * inv_255;     // G
                     dst[2 * hw + dst_base] = src[src_idx] as f32 * inv_255;     // B
@@ -362,6 +362,157 @@ mod image_preprocessing {
                         + src[s11 + c] as f32 * w11;
                     dst[c * hw + dst_base] = val * inv_255;
                 }
+            }
+        }
+    }
+
+    /// Fused bilinear resize + RGB=>BGR conversion into a pre-allocated NCHW f32 tensor.
+    ///
+    /// Unlike `preprocess_into`, this does NOT normalize to [0..1]. Pixel values
+    /// remain in [0..255] and channels are swapped from RGB to BGR.
+    /// This is used by YuNet face detection which expects BGR [0..255] input.
+    ///
+    /// Always uses stretch (no letterbox).
+    pub fn preprocess_into_bgr(
+        img: &ImageBuffer,
+        tensor: &mut Array4<f32>,
+    ) -> StretchMeta {
+        let (orig_height, orig_width, _channels) = img.shape();
+        let shape = tensor.shape();
+        let th = shape[2];
+        let tw = shape[3];
+
+        if let Some(src) = img.as_slice() {
+            let dst = tensor.as_slice_mut().unwrap();
+            nearest_into_bgr(src, orig_width, orig_height, dst, tw, tw, th);
+        } else {
+            // Fallback: non-contiguous data - go through dynamic image
+            let dyn_img = img.to_dynamic_image();
+            let resized = dyn_img.resize_exact(tw as u32, th as u32, image::imageops::FilterType::Triangle);
+            let rgb = resized.to_rgb8();
+            let src = rgb.as_raw();
+            let dst = tensor.as_slice_mut().unwrap();
+            let hw = th * tw;
+            for h in 0..th {
+                let row_offset = h * tw;
+                for w in 0..tw {
+                    let src_idx = (row_offset + w) * 3;
+                    let dst_base = row_offset + w;
+                    // RGB => BGR, keep [0..255]
+                    dst[dst_base] = src[src_idx + 2] as f32;
+                    dst[hw + dst_base] = src[src_idx + 1] as f32;
+                    dst[2 * hw + dst_base] = src[src_idx] as f32;
+                }
+            }
+        }
+
+        StretchMeta {
+            scale_x: orig_width as f32 / tw as f32,
+            scale_y: orig_height as f32 / th as f32,
+            original_width: orig_width as i32,
+            original_height: orig_height as i32,
+        }
+    }
+
+    /// Letterbox resize + RGB=>BGR into a pre-allocated NCHW f32 tensor.
+    ///
+    /// Preserves aspect ratio, pads with gray (114, 114, 114) in BGR [0..255].
+    /// Returns `LetterboxMeta` for coordinate correction.
+    pub fn preprocess_into_bgr_letterbox(
+        img: &ImageBuffer,
+        tensor: &mut Array4<f32>,
+    ) -> LetterboxMeta {
+        let (orig_height, orig_width, _channels) = img.shape();
+        let shape = tensor.shape();
+        let th = shape[2];
+        let tw = shape[3];
+
+        let scale = f32::min(tw as f32 / orig_width as f32, th as f32 / orig_height as f32);
+        let new_width = (orig_width as f32 * scale).round() as usize;
+        let new_height = (orig_height as f32 * scale).round() as usize;
+        let pad_left = (tw - new_width) / 2;
+        let pad_top = (th - new_height) / 2;
+
+        // Fill tensor with gray (114.0) in BGR
+        if let Some(dst) = tensor.as_slice_mut() {
+            for v in dst.iter_mut() {
+                *v = 114.0;
+            }
+
+            if let Some(src) = img.as_slice() {
+                nearest_into_bgr_padded(
+                    src, orig_width, orig_height,
+                    dst, tw, new_width, new_height,
+                    pad_left, pad_top,
+                );
+            }
+        }
+
+        LetterboxMeta {
+            scale,
+            pad_left: pad_left as i32,
+            pad_top: pad_top as i32,
+            original_width: orig_width as i32,
+            original_height: orig_height as i32,
+        }
+    }
+
+    /// Nearest-neighbor resize: RGB source => BGR NCHW f32, unnormalized [0..255].
+    ///
+    /// Uses `(dst + 0.5) * scale` sampling (no `-0.5` correction) to match the
+    /// convention used by YuNet's reference implementation. This avoids a
+    /// systematic half-pixel shift in decoded coordinates.
+    #[inline(always)]
+    fn nearest_into_bgr(
+        src: &[u8], orig_width: usize, orig_height: usize,
+        dst: &mut [f32], dst_stride: usize,
+        new_width: usize, new_height: usize,
+    ) {
+        let hw = dst.len() / 3;
+        let sx_scale = orig_width as f32 / new_width as f32;
+        let sy_scale = orig_height as f32 / new_height as f32;
+
+        for oh in 0..new_height {
+            let src_y = (((oh as f32 + 0.5) * sy_scale) as usize).min(orig_height - 1);
+
+            for ow in 0..new_width {
+                let src_x = (((ow as f32 + 0.5) * sx_scale) as usize).min(orig_width - 1);
+
+                let dst_base = oh * dst_stride + ow;
+                let si = (src_y * orig_width + src_x) * 3;
+
+                // RGB => BGR channel order, no normalization
+                dst[dst_base] = src[si + 2] as f32;
+                dst[hw + dst_base] = src[si + 1] as f32;
+                dst[2 * hw + dst_base] = src[si] as f32;
+            }
+        }
+    }
+
+    /// Nearest-neighbor resize with padding offset: RGB => BGR NCHW f32 [0..255].
+    #[inline(always)]
+    fn nearest_into_bgr_padded(
+        src: &[u8], orig_width: usize, orig_height: usize,
+        dst: &mut [f32], dst_stride: usize,
+        new_width: usize, new_height: usize,
+        pad_left: usize, pad_top: usize,
+    ) {
+        let hw = dst.len() / 3;
+        let sx_scale = orig_width as f32 / new_width as f32;
+        let sy_scale = orig_height as f32 / new_height as f32;
+
+        for oh in 0..new_height {
+            let src_y = (((oh as f32 + 0.5) * sy_scale) as usize).min(orig_height - 1);
+
+            for ow in 0..new_width {
+                let src_x = (((ow as f32 + 0.5) * sx_scale) as usize).min(orig_width - 1);
+
+                let dst_base = (oh + pad_top) * dst_stride + ow + pad_left;
+                let si = (src_y * orig_width + src_x) * 3;
+
+                dst[dst_base] = src[si + 2] as f32;
+                dst[hw + dst_base] = src[si + 1] as f32;
+                dst[2 * hw + dst_base] = src[si] as f32;
             }
         }
     }
