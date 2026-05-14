@@ -2,7 +2,7 @@
 
 All notable changes to this set of object detection utils will be documented in this file.
 
-## [0.10.0] - 2026-05-10
+## [0.10.0] - 2026-05-14
 ### Added
 - **ArcFace face recognition** (`ModelArcFaceOrt`): 512-dim L2-normalized embedding extraction via InsightFace models
   - Supported models: `w600k_mbf` (MobileFaceNet, ~14MB) and `w600k_r50` (ResNet50, ~166MB)
@@ -21,7 +21,7 @@ All notable changes to this set of object detection utils will be documented in 
 
 ---
 
-## [0.9.0] - 2026-03-19
+## [0.9.0] - 2026-05-07
 ### Added
 - **YuNet face detection** (OpenCV Zoo, 0.083M params): bounding box, 5 facial landmarks, confidence score
   - Shared decode logic in `face_detection.rs` (`FaceDetection`, `FaceDetector` trait, `nms_faces`, `decode_yunet_stride`)
@@ -34,13 +34,13 @@ All notable changes to this set of object detection utils will be documented in 
 
 ---
 
-## [0.8.2] - 2026-03-15
+## [0.8.2] - 2026-03-16
 ### Changed
 - TensorRT backend no longer requires manual input size — dimensions are evaluated automatically from `.engine` file
 
 ---
 
-## [0.8.1] - 2026-03-12
+## [0.8.1] - 2026-03-14
 ### Added
 - **TensorRT + OpenCV compatibility** (`tensorrt-opencv-compat` feature): use OpenCV I/O with TensorRT inference
   - `ModelTrait` accepting `opencv::core::Mat` directly
@@ -48,7 +48,7 @@ All notable changes to this set of object detection utils will be documented in 
 
 ---
 
-## [0.8.0] - 2026-03-08
+## [0.8.0] - 2026-03-14
 ### Added
 - **TensorRT backend** (`tensorrt-backend` feature): direct NVIDIA GPU inference via [tensorrt-infer](https://crates.io/crates/tensorrt-infer)
   - Supports TensorRT 6-8 (Jetson Nano, JetPack 4.6) and TensorRT 10+ (desktop GPUs)
