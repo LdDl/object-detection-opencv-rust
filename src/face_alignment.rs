@@ -1,9 +1,14 @@
 //! Face alignment via affine warp using 5 facial landmarks.
 //!
 //! Given 5 landmarks (left_eye, right_eye, nose, left_mouth, right_mouth)
-//! detected by YuNet, computes a similarity transform that maps them to
-//! canonical ArcFace reference positions, then warps the source image
-//! to produce a 112x112 aligned face crop.
+//! detected by YuNet or other face detectors, computes a similarity transform
+//! that maps them to canonical ArcFace reference positions, then warps the
+//! source image to produce an aligned face crop.
+//!
+//! Supports arbitrary output sizes:
+//! - 112x112 for ArcFace recognition (default)
+//! - 128x128 for inswapper face swapping
+//! - any custom size (reference points are scaled proportionally)
 //!
 //! The algorithm used is a simplified Umeyama estimator for 2D similarity
 //! transforms (rotation + uniform scale + translation).
@@ -14,8 +19,14 @@
 use crate::image_buffer::ImageBuffer;
 use ndarray::Array3;
 
-/// Output size for ArcFace-aligned faces.
-pub const ALIGNED_FACE_SIZE: u32 = 112;
+/// Output size for ArcFace recognition (112x112).
+pub const ARCFACE_FACE_SIZE: u32 = 112;
+
+/// Output size for inswapper face swapping (128x128).
+pub const INSWAPPER_FACE_SIZE: u32 = 128;
+
+/// Default aligned face size (112x112, same as [`ARCFACE_FACE_SIZE`]).
+pub const ALIGNED_FACE_SIZE: u32 = ARCFACE_FACE_SIZE;
 
 /// ArcFace canonical reference landmarks for 112x112 crop.
 ///
@@ -91,6 +102,22 @@ fn estimate_similarity(src: &[(f32, f32); 5], dst: &[(f32, f32); 5]) -> [[f32; 3
 /// # Returns
 /// A 112x112 `ImageBuffer` containing the aligned face crop.
 pub fn align_face(image: &ImageBuffer, landmarks: &[[f32; 2]; 5]) -> ImageBuffer {
+    align_face_sized(image, landmarks, ALIGNED_FACE_SIZE)
+}
+
+/// Aligns a face by warping the source image to an arbitrary output size.
+///
+/// Reference landmarks are scaled proportionally from the canonical 112x112
+/// ArcFace positions. Use 112 for ArcFace recognition, 128 for inswapper, etc.
+///
+/// # Arguments
+/// * `image` - Source image (RGB, HWC)
+/// * `landmarks` - 5 facial landmarks as `[[x, y]; 5]` in source image coordinates
+/// * `output_size` - Output crop size (square, e.g. 112, 128)
+///
+/// # Returns
+/// An `output_size x output_size` `ImageBuffer` containing the aligned face crop.
+pub fn align_face_sized(image: &ImageBuffer, landmarks: &[[f32; 2]; 5], output_size: u32) -> ImageBuffer {
     let src: [(f32, f32); 5] = [
         (landmarks[0][0], landmarks[0][1]),
         (landmarks[1][0], landmarks[1][1]),
@@ -99,8 +126,17 @@ pub fn align_face(image: &ImageBuffer, landmarks: &[[f32; 2]; 5]) -> ImageBuffer
         (landmarks[4][0], landmarks[4][1]),
     ];
 
-    let m = estimate_similarity(&src, &ARCFACE_REF);
-    warp_affine(image, &m, ALIGNED_FACE_SIZE, ALIGNED_FACE_SIZE)
+    let scale = output_size as f32 / ALIGNED_FACE_SIZE as f32;
+    let dst: [(f32, f32); 5] = [
+        (ARCFACE_REF[0].0 * scale, ARCFACE_REF[0].1 * scale),
+        (ARCFACE_REF[1].0 * scale, ARCFACE_REF[1].1 * scale),
+        (ARCFACE_REF[2].0 * scale, ARCFACE_REF[2].1 * scale),
+        (ARCFACE_REF[3].0 * scale, ARCFACE_REF[3].1 * scale),
+        (ARCFACE_REF[4].0 * scale, ARCFACE_REF[4].1 * scale),
+    ];
+
+    let m = estimate_similarity(&src, &dst);
+    warp_affine(image, &m, output_size, output_size)
 }
 
 /// Inverts a 2x3 affine matrix.
@@ -235,6 +271,22 @@ mod tests {
         let aligned = align_face(&img, &landmarks);
         assert_eq!(aligned.width(), 112);
         assert_eq!(aligned.height(), 112);
+        assert_eq!(aligned.channels(), 3);
+    }
+
+    #[test]
+    fn test_align_face_sized_128() {
+        let img = ImageBuffer::zeros(200, 300, 3);
+        let landmarks = [
+            [100.0, 80.0],
+            [150.0, 80.0],
+            [125.0, 110.0],
+            [105.0, 135.0],
+            [145.0, 135.0],
+        ];
+        let aligned = align_face_sized(&img, &landmarks, 128);
+        assert_eq!(aligned.width(), 128);
+        assert_eq!(aligned.height(), 128);
         assert_eq!(aligned.channels(), 3);
     }
 }
