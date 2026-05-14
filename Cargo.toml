@@ -385,6 +385,15 @@ required-features = ["opencv-backend"]
 name = "yunet_tensorrt"
 required-features = ["tensorrt-backend"]
 
+# ArcFace face pipeline examples
+[[example]]
+name = "arcface_ort"
+required-features = ["ort-backend"]
+
+[[example]]
+name = "arcface_r50_ort"
+required-features = ["ort-backend"]
+
 [[example]]
 name = "yunet_rknn"
 required-features = ["rknn-backend"]

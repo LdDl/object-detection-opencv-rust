@@ -6,8 +6,11 @@
 mod model_ultralytics;
 mod model_yolov5;
 mod model_yunet;
+mod model_arcface;
 
 pub use model_ultralytics::ModelUltralyticsOrt;
 pub use model_ultralytics::OrtModelError;
 pub use model_yolov5::ModelYOLOv5Ort;
 pub use model_yunet::ModelYuNetOrt;
+pub use model_arcface::ModelArcFaceOrt;
+pub use model_arcface::ArcFaceNorm;

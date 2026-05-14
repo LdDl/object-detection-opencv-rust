@@ -516,6 +516,145 @@ mod image_preprocessing {
             }
         }
     }
+
+    /// Bilinear resize with padding offset: RGB => BGR NCHW f32 [0..255].
+    ///
+    /// Matches OpenCV's default bilinear interpolation used by FaceDetectorYN.
+    /// Produces better landmark accuracy than nearest-neighbor for face detection models.
+    #[inline(always)]
+    fn bilinear_into_bgr_padded(
+        src: &[u8], orig_width: usize, orig_height: usize,
+        dst: &mut [f32], dst_stride: usize,
+        new_width: usize, new_height: usize,
+        pad_left: usize, pad_top: usize,
+    ) {
+        let hw = dst.len() / 3;
+        let sx_scale = orig_width as f32 / new_width as f32;
+        let sy_scale = orig_height as f32 / new_height as f32;
+
+        for oh in 0..new_height {
+            let src_yf = (oh as f32 + 0.5) * sy_scale - 0.5;
+            let y0 = src_yf.floor().max(0.0) as usize;
+            let y1 = (y0 + 1).min(orig_height - 1);
+            let dy = src_yf - y0 as f32;
+            let dy = dy.max(0.0);
+
+            for ow in 0..new_width {
+                let src_xf = (ow as f32 + 0.5) * sx_scale - 0.5;
+                let x0 = src_xf.floor().max(0.0) as usize;
+                let x1 = (x0 + 1).min(orig_width - 1);
+                let dx = src_xf - x0 as f32;
+                let dx = dx.max(0.0);
+
+                let dst_base = (oh + pad_top) * dst_stride + ow + pad_left;
+
+                let si00 = (y0 * orig_width + x0) * 3;
+                let si01 = (y0 * orig_width + x1) * 3;
+                let si10 = (y1 * orig_width + x0) * 3;
+                let si11 = (y1 * orig_width + x1) * 3;
+
+                for c in 0..3 {
+                    let v00 = src[si00 + c] as f32;
+                    let v01 = src[si01 + c] as f32;
+                    let v10 = src[si10 + c] as f32;
+                    let v11 = src[si11 + c] as f32;
+
+                    let v0 = v00 * (1.0 - dx) + v01 * dx;
+                    let v1 = v10 * (1.0 - dx) + v11 * dx;
+                    let v = v0 * (1.0 - dy) + v1 * dy;
+
+                    // RGB => BGR: channel 0->2, 1->1, 2->0
+                    let bgr_c = 2 - c;
+                    dst[bgr_c * hw + dst_base] = v;
+                }
+            }
+        }
+    }
+
+    /// Bilinear resize without padding: RGB => BGR NCHW f32 [0..255].
+    #[inline(always)]
+    fn bilinear_into_bgr(
+        src: &[u8], orig_width: usize, orig_height: usize,
+        dst: &mut [f32], dst_stride: usize,
+        new_width: usize, new_height: usize,
+    ) {
+        bilinear_into_bgr_padded(
+            src, orig_width, orig_height,
+            dst, dst_stride,
+            new_width, new_height,
+            0, 0,
+        )
+    }
+
+    /// Letterbox preprocessing with **bilinear** resize: RGB => BGR NCHW f32 [0..255].
+    ///
+    /// Same as `preprocess_into_bgr_letterbox` but uses bilinear interpolation
+    /// instead of nearest-neighbor. This matches OpenCV's default resize and
+    /// produces better results for face detection models (YuNet).
+    pub fn preprocess_into_bgr_letterbox_bilinear(
+        img: &ImageBuffer,
+        tensor: &mut Array4<f32>,
+    ) -> LetterboxMeta {
+        let (orig_height, orig_width, _channels) = img.shape();
+        let shape = tensor.shape();
+        let th = shape[2];
+        let tw = shape[3];
+
+        let scale = f32::min(tw as f32 / orig_width as f32, th as f32 / orig_height as f32);
+        let new_width = (orig_width as f32 * scale).round() as usize;
+        let new_height = (orig_height as f32 * scale).round() as usize;
+        let pad_left = (tw - new_width) / 2;
+        let pad_top = (th - new_height) / 2;
+
+        if let Some(dst) = tensor.as_slice_mut() {
+            for v in dst.iter_mut() {
+                *v = 114.0;
+            }
+
+            if let Some(src) = img.as_slice() {
+                bilinear_into_bgr_padded(
+                    src, orig_width, orig_height,
+                    dst, tw, new_width, new_height,
+                    pad_left, pad_top,
+                );
+            }
+        }
+
+        LetterboxMeta {
+            scale,
+            pad_left: pad_left as i32,
+            pad_top: pad_top as i32,
+            original_width: orig_width as i32,
+            original_height: orig_height as i32,
+        }
+    }
+
+    /// Stretch preprocessing with **bilinear** resize: RGB => BGR NCHW f32 [0..255].
+    pub fn preprocess_into_bgr_bilinear(
+        img: &ImageBuffer,
+        tensor: &mut Array4<f32>,
+    ) -> StretchMeta {
+        let (orig_height, orig_width, _channels) = img.shape();
+        let shape = tensor.shape();
+        let th = shape[2];
+        let tw = shape[3];
+
+        if let Some(dst) = tensor.as_slice_mut() {
+            if let Some(src) = img.as_slice() {
+                bilinear_into_bgr(
+                    src, orig_width, orig_height,
+                    dst, tw, tw, th,
+                );
+            }
+        }
+
+        StretchMeta {
+            scale_x: orig_width as f32 / tw as f32,
+            scale_y: orig_height as f32 / th as f32,
+            original_width: orig_width as i32,
+            original_height: orig_height as i32,
+        }
+    }
 }
 
 #[cfg(any(feature = "ort-backend", feature = "rknn-backend", feature = "tensorrt-backend"))]

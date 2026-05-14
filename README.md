@@ -26,8 +26,10 @@ Also this crate provides face detection via YuNet model.
 | YOLO v8 n/s/m/l/x | :white_check_mark: | :white_check_mark: | :x: (is it even possible?) | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v9 t/s/m/c/e | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
 | YOLO v11 n/s/m/l/x | :white_check_mark: (uses `ModelUltralyticsOrt`) | :white_check_mark: (uses `ModelUltralyticsV8`) | :x: | :white_check_mark: (uses `Model::tensorrt()`) |
-| **Face Detection** | | | | |
+| **Face Detection & Recognition** | | | | |
 | YuNet (OpenCV Zoo) | :white_check_mark: (uses `Model::yunet_ort()`) | :white_check_mark: (uses `Model::yunet_opencv()`) | :x: | :white_check_mark: (uses `Model::yunet_tensorrt()`) |
+| ArcFace (InsightFace) | :white_check_mark: (uses `Model::arcface_ort()`) | :x: | :x: | :x: |
+| Face Pipeline (YuNet + ArcFace) | :white_check_mark: (uses `Model::face_pipeline()`) | :x: | :x: | :x: |
 
 **Note on YOLOv3/v4/v7 ONNX:** Darknet `.cfg` + `.weights` can be converted to ONNX using [darknet2onnx](https://github.com/LdDl/darknet2onnx). Use `--format yolov8` to get `[1, 84, N]` output compatible with `Model::ort()` / `Model::opencv()` / `Model::tensorrt()` or `--format yolov5` for `[1, N, 85]` compatible with `Model::yolov5_ort()` / `Model::yolov5_opencv()`. E.g. using `yolov8` format:
 ```bash
@@ -57,6 +59,7 @@ Also be aware: I've tested only `yolov8` format for TensorRT.
   - [TensorRT Backend](#tensorrt-backend)
   - [RKNN Backend](#rknn-backend)
   - [Face Detection (YuNet)](#face-detection-yunet)
+  - [Face Recognition (ArcFace) & Pipeline](#face-recognition-arcface--pipeline)
 - [Features](#features)
 - [Migration from 0.3.x](#migration-from-03x)
 - [References](#references)
@@ -110,7 +113,7 @@ This crate supports multiple inference backends:
 
 | Backend | Default | OpenCV Required | GPU Support | Models Supported |
 |---------|---------|-----------------|-------------|------------------|
-| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX), YuNet face detection |
+| `ort-backend` | Yes | No | CUDA, TensorRT | YOLOv5/v5u/v8/v9/v11 (ONNX), YuNet face detection, ArcFace recognition |
 | `opencv-backend` | No | Yes | CUDA, OpenCL, OpenVINO | All YOLO versions, YuNet face detection |
 | `tensorrt-backend` | No | No | NVIDIA GPU (TensorRT) | YOLOv8/v9/v11 (.engine), YuNet face detection |
 | `rknn-backend` | No | No | Rockchip NPU | YOLOv8/v9/v11 (.rknn), YuNet face detection |
@@ -756,6 +759,97 @@ let detections = model.forward(&img_buffer, 0.7, 0.3)
 
 See full examples: [examples/yunet_ort.rs](examples/yunet_ort.rs), [examples/yunet_opencv.rs](examples/yunet_opencv.rs), [examples/yunet_tensorrt.rs](examples/yunet_tensorrt.rs), [examples/yunet_rknn.rs](examples/yunet_rknn.rs)
 
+### Face Recognition (ArcFace) & Pipeline
+
+This crate supports face recognition using [ArcFace](https://github.com/deepinsight/insightface) models from InsightFace model zoo. The full pipeline: detect face (YuNet) => align via 5 landmarks (affine warp to 112x112) => extract 512-dim embedding (ArcFace).
+
+Supported models:
+
+| Model | Architecture | Size | Normalization | `ArcFaceNorm` variant |
+|-------|-------------|------|---------------|-----------------------|
+| `w600k_mbf.onnx` | MobileFaceNet | ~14 MB | (px-127.5)/127.5 => [-1,1] | `MobileFaceNet` (default) |
+| `w600k_r50.onnx` | ResNet50 | ~166 MB | px/255.0 => [0,1] | `ResNet` |
+
+**Download weights:**
+```bash
+# ArcFace MobileFaceNet (~14 MB, MIT license)
+bash scripts/download_arcface.sh
+
+# Or manually:
+mkdir -p pretrained
+wget https://huggingface.co/WePrompt/buffalo_sc/resolve/main/w600k_mbf.onnx \
+  -O pretrained/w600k_mbf.onnx
+```
+
+**Usage (full pipeline: detect + align + embed):**
+```rust
+use od_opencv::{ImageBuffer, Model, cosine_similarity};
+
+ort::init().commit();
+
+let mut pipeline = Model::face_pipeline(
+    "pretrained/face_detection_yunet_2023mar.onnx",
+    "pretrained/w600k_mbf.onnx",
+).expect("Failed to load pipeline");
+
+let img = image::open("photo.jpg").expect("Failed to load image");
+let img_buffer = ImageBuffer::from_dynamic_image(img);
+
+let faces = pipeline.process(&img_buffer, 0.7, 0.3)
+    .expect("Pipeline failed");
+
+for face in &faces {
+    println!("Face: confidence={:.3}, embedding L2 norm={:.4}",
+        face.confidence,
+        face.embedding.iter().map(|v| v * v).sum::<f32>().sqrt());
+}
+
+// Compare two faces
+if faces.len() >= 2 {
+    let sim = cosine_similarity(&faces[0].embedding, &faces[1].embedding);
+    println!("Similarity: {:.4}", sim);
+}
+```
+
+**Usage (ArcFace only - for pre-aligned faces):**
+```rust
+use od_opencv::{ImageBuffer, Model};
+
+ort::init().commit();
+
+let mut arcface = Model::arcface_ort("pretrained/w600k_mbf.onnx")
+    .expect("Failed to load ArcFace");
+
+// aligned_face must be 112x112 RGB
+let embedding = arcface.forward(&aligned_face)
+    .expect("Embedding extraction failed");
+```
+
+**Usage (ResNet50 model with explicit normalization):**
+```rust
+use od_opencv::{Model, ArcFaceNorm};
+
+ort::init().commit();
+
+// ResNet50 uses [0, 1] normalization instead of [-1, 1]
+let mut pipeline = Model::face_pipeline_with_norm(
+    "pretrained/face_detection_yunet_2023mar.onnx",
+    "pretrained/w600k_r50.onnx",
+    ArcFaceNorm::ResNet,
+).expect("Failed to load pipeline");
+```
+
+**Usage (manual alignment):**
+```rust
+use od_opencv::face_alignment::align_face;
+
+// landmarks from YuNet detection
+let aligned = align_face(&image, &detection.landmarks);
+// aligned is 112x112 RGB, ready for ArcFace
+```
+
+See full example: [examples/arcface_ort.rs](examples/arcface_ort.rs)
+
 ## Features
 
 ### Letterbox Preprocessing
@@ -806,6 +900,9 @@ Your existing code using `ModelUltralyticsV8`, `ModelYOLOClassic`, etc. will con
 * YuNet face detection paper - https://link.springer.com/article/10.1007/s11633-023-1423-y, Shiqi Yu, Yuanbo Xia, et al.
 * YuNet training repository (libfacedetection) - https://github.com/ShiqiYu/libfacedetection.train
 * YuNet pretrained weights (OpenCV Zoo) - https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet
+* ArcFace paper - https://arxiv.org/abs/1801.07698, Jiankang Deng, Jia Guo, Niannan Xue, Stefanos Zafeiriou
+* InsightFace model zoo - https://github.com/deepinsight/insightface
+* ArcFace pretrained weights (HuggingFace mirror) - https://huggingface.co/WePrompt/buffalo_sc
 * Original Darknet YOLO repository - https://github.com/pjreddie/darknet
 * Most popular fork of Darknet YOLO - https://github.com/AlexeyAB/darknet
 * Developers of YOLOv8/v11 - https://github.com/ultralytics/ultralytics
