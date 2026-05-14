@@ -128,22 +128,22 @@ Always use `default-features = false` when enabling `opencv-backend` to disable 
 
 ```toml
 # Use ORT backend (default) - no OpenCV installation needed
-od_opencv = "0.6"
+od_opencv = "0.10"
 
 # Use ORT backend with CUDA acceleration
-od_opencv = { version = "0.6", features = ["ort-cuda-backend"] }
+od_opencv = { version = "0.10", features = ["ort-cuda-backend"] }
 
 # Use ORT backend with TensorRT acceleration. WARNING: I DID NOT TESTED IT MYSELF!
-od_opencv = { version = "0.6", features = ["ort-tensorrt-backend"] }
+od_opencv = { version = "0.10", features = ["ort-tensorrt-backend"] }
 
 # Use OpenCV backend (required for Darknet models)
-od_opencv = { version = "0.6", default-features = false, features = ["opencv-backend"] }
+od_opencv = { version = "0.10", default-features = false, features = ["opencv-backend"] }
 
 # Use TensorRT backend (NVIDIA GPUs, Jetson devices)
-od_opencv = { version = "0.8", default-features = false, features = ["tensorrt-backend"] }
+od_opencv = { version = "0.10", default-features = false, features = ["tensorrt-backend"] }
 
 # Use RKNN backend (Rockchip NPU devices)
-od_opencv = { version = "0.8", default-features = false, features = ["rknn-backend"] }
+od_opencv = { version = "0.10", default-features = false, features = ["rknn-backend"] }
 ```
 
 ## Prerequisites
@@ -323,7 +323,7 @@ If you want to use CUDA acceleration, change your `Cargo.toml`:
 
 ```toml
 [dependencies]
-od_opencv = { version = "0.6", features = ["ort-cuda-backend"] }
+od_opencv = { version = "0.10", features = ["ort-cuda-backend"] }
 ```
 
 And use `new_from_file_cuda` instead of `new_from_file`:
@@ -341,7 +341,7 @@ let mut model = ModelUltralyticsOrt::new_from_file_cuda(
 If you need OpenCV for video capture or image I/O but want ORT for inference, use the `ort-opencv-compat` feature:
 
 ```toml
-od_opencv = { version = "0.6", features = ["ort-opencv-compat"] }
+od_opencv = { version = "0.10", features = ["ort-opencv-compat"] }
 ```
 
 This enables `ModelTrait` which accepts `opencv::core::Mat` directly:
@@ -507,7 +507,7 @@ The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer]
 2. Add to `Cargo.toml`:
     ```toml
     [dependencies]
-    od_opencv = { version = "0.8", default-features = false, features = ["tensorrt-backend"] }
+    od_opencv = { version = "0.10", default-features = false, features = ["tensorrt-backend"] }
     image = "0.25"
     ```
 
@@ -555,7 +555,7 @@ The TensorRT backend runs inference directly on NVIDIA GPUs via [tensorrt-infer]
 If you need OpenCV for video capture or image I/O but want TensorRT for inference, use the `tensorrt-opencv-compat` feature:
 
 ```toml
-od_opencv = { version = "0.8", default-features = false, features = ["tensorrt-opencv-compat"] }
+od_opencv = { version = "0.10", default-features = false, features = ["tensorrt-opencv-compat"] }
 ```
 
 This enables `ModelTrait` which accepts `opencv::core::Mat` directly:
@@ -578,7 +578,7 @@ The RKNN backend runs inference on Rockchip NPU using the [rknn-runtime](https:/
 1. Add to `Cargo.toml`:
     ```toml
     [dependencies]
-    od_opencv = { version = "0.6", default-features = false, features = ["rknn-backend"] }
+    od_opencv = { version = "0.10", default-features = false, features = ["rknn-backend"] }
     image = "0.25"
     ```
 
@@ -860,10 +860,10 @@ This works for ORT, OpenCV, and TensorRT backends.
 
 ```toml
 # ORT backend with letterbox
-od_opencv = { version = "0.6", features = ["letterbox"] }
+od_opencv = { version = "0.10", features = ["letterbox"] }
 
 # OpenCV backend with letterbox
-od_opencv = { version = "0.6", default-features = false, features = ["opencv-backend", "letterbox"] }
+od_opencv = { version = "0.10", default-features = false, features = ["opencv-backend", "letterbox"] }
 ```
 
 **Without letterbox (default):** Images are stretched to the network input size. This may introduce aspect ratio distortion.
