@@ -63,6 +63,7 @@ pub struct ModelArcFaceOrt {
     input_name: String,
     output_name: String,
     norm: ArcFaceNorm,
+    input_size: u32,
 }
 
 impl ModelArcFaceOrt {
@@ -141,15 +142,15 @@ impl ModelArcFaceOrt {
             .ok_or_else(|| OrtModelError::InvalidOutputShape("Cannot read input tensor shape".into()))?;
         if input_shape.len() != 4 {
             return Err(OrtModelError::InvalidOutputShape(
-                format!("Expected 4D input [1,3,112,112], got {}D", input_shape.len()),
+                format!("Expected 4D input [1,3,H,W], got {}D", input_shape.len()),
             ));
         }
-        // Verify expected shape
-        if input_shape[1] != 3 || input_shape[2] != 112 || input_shape[3] != 112 {
+        if input_shape[1] != 3 || input_shape[2] != input_shape[3] {
             return Err(OrtModelError::InvalidOutputShape(
-                format!("Expected input [1,3,112,112], got {:?}", input_shape),
+                format!("Expected square input [1,3,S,S], got {:?}", input_shape),
             ));
         }
+        let input_size = input_shape[2] as u32;
 
         let input_name = inputs[0].name().to_string();
 
@@ -159,8 +160,14 @@ impl ModelArcFaceOrt {
         }
         let output_name = outputs_info[0].name().to_string();
 
-        let tensor_buf = Array4::<f32>::zeros((1, 3, 112, 112));
-        Ok(Self { session, tensor_buf, input_name, output_name, norm })
+        let s = input_size as usize;
+        let tensor_buf = Array4::<f32>::zeros((1, 3, s, s));
+        Ok(Self { session, tensor_buf, input_name, output_name, norm, input_size })
+    }
+
+    /// Returns the expected aligned face input size (square side, e.g. 112).
+    pub fn input_size(&self) -> u32 {
+        self.input_size
     }
 
     /// Extracts a 512-dimensional embedding from an aligned 112x112 face.
@@ -175,9 +182,10 @@ impl ModelArcFaceOrt {
     /// L2-normalized 512-dimensional embedding vector.
     pub fn forward(&mut self, aligned_face: &ImageBuffer) -> Result<[f32; 512], OrtModelError> {
         let (h, w, _) = aligned_face.shape();
-        if h != 112 || w != 112 {
+        let s = self.input_size as usize;
+        if h != s || w != s {
             return Err(OrtModelError::InvalidOutputShape(
-                format!("ArcFace requires 112x112 input, got {}x{}", w, h),
+                format!("ArcFace requires {s}x{s} input, got {}x{}", w, h),
             ));
         }
 
@@ -185,8 +193,8 @@ impl ModelArcFaceOrt {
         let src = aligned_face.as_array();
         let norm = self.norm;
         for c in 0..3 {
-            for y in 0..112 {
-                for x in 0..112 {
+            for y in 0..s {
+                for x in 0..s {
                     self.tensor_buf[[0, c, y, x]] =
                         norm.normalize(src[[y, x, c]] as f32);
                 }

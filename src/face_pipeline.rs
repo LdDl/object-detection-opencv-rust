@@ -10,7 +10,7 @@
 //! ```
 
 use crate::backend_ort::{ModelYuNetOrt, ModelArcFaceOrt, ArcFaceNorm, OrtModelError};
-use crate::face_alignment::align_face;
+use crate::face_alignment::align_face_sized;
 use crate::face_detection::FaceDetection;
 use crate::image_buffer::ImageBuffer;
 
@@ -135,6 +135,14 @@ impl FacePipeline {
         self.detector.input_size()
     }
 
+    /// Returns the expected aligned face size (square side) for the recognizer.
+    ///
+    /// This is read from the ONNX model's input shape (e.g. 112 for MobileFaceNet).
+    /// Use this instead of hardcoding a constant.
+    pub fn aligned_size(&self) -> u32 {
+        self.recognizer.input_size()
+    }
+
     /// Enables or disables letterbox preprocessing for the detector.
     pub fn set_letterbox(&mut self, enabled: bool) {
         self.detector.set_letterbox(enabled);
@@ -159,7 +167,7 @@ impl FacePipeline {
 
         let mut results = Vec::with_capacity(detections.len());
         for det in &detections {
-            let aligned = align_face(image, &det.landmarks);
+            let aligned = align_face_sized(image, &det.landmarks, self.aligned_size());
             let embedding = self.recognizer.forward(&aligned)?;
             results.push(FaceResult {
                 x: det.x,
